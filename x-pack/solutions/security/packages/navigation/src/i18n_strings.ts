@@ -20,7 +20,7 @@ export const i18nStrings = {
   },
   rules: {
     title: i18n.translate('securitySolutionPackages.navLinks.rules', {
-      defaultMessage: 'Rules',
+      defaultMessage: 'Detection rules',
     }),
     management: {
       title: i18n.translate('securitySolutionPackages.navLinks.rules.management', {
