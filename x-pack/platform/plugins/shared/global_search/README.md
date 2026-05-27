@@ -3,6 +3,10 @@
 The GlobalSearch plugin provides an easy way to search for various objects, such as applications
 or dashboards from the Kibana instance, from both server and client-side plugins
 
+## Architecture
+
+- **[Bucket architecture](./docs/buckets_architecture.md)** — grouping results into sections (**Navigate**, **Recent**, **Results**, etc.), pipeline design, and phased rollout. Navigate + Recent are implemented in `globalSearchBar`.
+
 ## Consuming the globalSearch API
 
 ```ts

@@ -26,6 +26,13 @@ export type {
   GlobalSearchFindParams,
   GlobalSearchProviderFindParams,
 } from '../common/types';
+export {
+  organizeGlobalSearchResults,
+  GLOBAL_SEARCH_BUCKET_NAVIGATE,
+  GLOBAL_SEARCH_BUCKET_RECENT,
+  GLOBAL_SEARCH_BUCKET_RESULTS,
+} from '../common/buckets';
+export type { GlobalSearchBucket, GlobalSearchBucketId } from '../common/buckets';
 export type {
   GlobalSearchPluginSetup,
   GlobalSearchPluginStart,

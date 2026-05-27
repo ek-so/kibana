@@ -44,6 +44,18 @@ jest.mock('../search_syntax', () => ({
   })),
 }));
 
+const mockGetRecentPages = jest.fn(() => []);
+const mockRecordRecentPage = jest.fn();
+
+jest.mock('../recent/recent_store', () => ({
+  getRecentPages: () => mockGetRecentPages(),
+  filterRecentPagesForTerm: jest.fn((recent: unknown[]) => recent),
+  recordRecentPage: (...args: unknown[]) => mockRecordRecentPage(...args),
+}));
+
+const getSelectableLabels = (options: Array<{ label?: string; isGroupLabel?: boolean }>) =>
+  options.filter((option) => !option.isGroupLabel).map((option) => option.label);
+
 type Result =
   | string
   | {
@@ -85,6 +97,7 @@ describe('useSearchState', () => {
   beforeEach(() => {
     jest.useFakeTimers({ legacyFakeTimers: true });
     jest.clearAllMocks();
+    mockGetRecentPages.mockReturnValue([]);
   });
 
   afterEach(() => {
@@ -123,6 +136,35 @@ describe('useSearchState', () => {
       jest.advanceTimersByTime(350);
     });
   };
+
+  it('shows recent pages immediately when the modal opens', async () => {
+    mockGetRecentPages.mockReturnValue([
+      createResult({ id: 'recent-discover', type: 'application', title: 'Discover' }),
+    ]);
+
+    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+
+    const { result } = renderHook(() =>
+      useSearchState({
+        globalSearch,
+        navigateToUrl,
+        reportEvent,
+      })
+    );
+
+    act(() => {
+      result.current.triggerInitialLoad();
+    });
+
+    const labels = getSelectableLabels(result.current.options);
+    expect(labels).toContain('recent-discover');
+    expect(
+      result.current.options.some(
+        (option: { isGroupLabel?: boolean; label?: string }) =>
+          option.isGroupLabel && option.label === 'Recent'
+      )
+    ).toBe(true);
+  });
 
   it('displays an error state and does not search again when the search input exceeds the specified char limit', async () => {
     const { globalSearch, navigateToUrl, reportEvent } = makeDeps({ searchCharLimit: 1 });
@@ -170,7 +212,7 @@ describe('useSearchState', () => {
 
     await triggerInitialLoadAndRunDebounce(result);
 
-    const labels = result.current.options.map((o: any) => o.label);
+    const labels = getSelectableLabels(result.current.options);
     expect(labels).toEqual(['Canvas', 'Discover', 'Graph']); // Visualize (type=test) filtered out
   });
 
@@ -210,7 +252,7 @@ describe('useSearchState', () => {
 
     expect(reportEvent.searchRequest).toHaveBeenCalledTimes(1);
 
-    const labels = result.current.options.map((o: any) => o.label);
+    const labels = getSelectableLabels(result.current.options);
     expect(labels).toEqual(['Highest score', 'Lowest score']);
   });
 
@@ -254,7 +296,7 @@ describe('useSearchState', () => {
 
     expect(globalSearch.find).toHaveBeenCalledTimes(2);
 
-    const lastLabels = result.current.options.map((o: any) => o.label);
+    const lastLabels = getSelectableLabels(result.current.options);
     expect(lastLabels).toEqual(['Map', 'Visualize']);
 
     // Late emission from first search should NOT override
@@ -263,7 +305,7 @@ describe('useSearchState', () => {
       firstSearch$.complete();
     });
 
-    const labelsAfterLateEmit = result.current.options.map((o: any) => o.label);
+    const labelsAfterLateEmit = getSelectableLabels(result.current.options);
     expect(labelsAfterLateEmit).toEqual(['Map', 'Visualize']);
   });
 });

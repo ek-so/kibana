@@ -8,6 +8,15 @@
 import { i18n } from '@kbn/i18n';
 
 export const i18nStrings = {
+  bucketRecent: i18n.translate('xpack.globalSearchBar.searchBar.bucket.recent', {
+    defaultMessage: 'Recent',
+  }),
+  bucketNavigate: i18n.translate('xpack.globalSearchBar.searchBar.bucket.navigate', {
+    defaultMessage: 'Navigate',
+  }),
+  bucketResults: i18n.translate('xpack.globalSearchBar.searchBar.bucket.results', {
+    defaultMessage: 'Results',
+  }),
   placeholderText: i18n.translate('xpack.globalSearchBar.searchBar.placeholder', {
     defaultMessage: 'Find apps, content, and more.',
   }),

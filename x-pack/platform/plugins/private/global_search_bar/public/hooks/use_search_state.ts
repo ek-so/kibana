@@ -10,18 +10,39 @@ import type { EuiSelectableOnChangeEvent } from '@elastic/eui/src/components/sel
 import type { RefObject } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Subscription } from 'rxjs';
-import type { GlobalSearchFindParams, GlobalSearchResult } from '@kbn/global-search-plugin/public';
+import type {
+  GlobalSearchBucketId,
+  GlobalSearchFindParams,
+  GlobalSearchResult,
+} from '@kbn/global-search-plugin/public';
+import {
+  GLOBAL_SEARCH_BUCKET_NAVIGATE,
+  GLOBAL_SEARCH_BUCKET_RECENT,
+  GLOBAL_SEARCH_BUCKET_RESULTS,
+  organizeGlobalSearchResults,
+} from '@kbn/global-search-plugin/public';
 import useDebounce from 'react-use/lib/useDebounce';
 import { apm } from '@elastic/apm-rum';
 import useMountedState from 'react-use/lib/useMountedState';
 import type { SearchSuggestion } from '../suggestions';
 import { getSuggestions } from '../suggestions';
 import type { SearchProps } from '../components/types';
-import { resultToOption, suggestionToOption } from '../lib';
 import { parseSearchParams } from '../search_syntax';
-import { sort } from '../components';
+import { buildSelectableOptionsFromBuckets } from '../buckets/build_selectable_options';
+import {
+  filterRecentPagesForTerm,
+  getRecentPages,
+  recordRecentPage,
+} from '../recent/recent_store';
+import { i18nStrings } from '../strings';
 
 const UNKNOWN_TAG_ID = '__unknown__';
+
+const bucketTitles: Record<GlobalSearchBucketId, string> = {
+  [GLOBAL_SEARCH_BUCKET_RECENT]: i18nStrings.bucketRecent,
+  [GLOBAL_SEARCH_BUCKET_NAVIGATE]: i18nStrings.bucketNavigate,
+  [GLOBAL_SEARCH_BUCKET_RESULTS]: i18nStrings.bucketResults,
+};
 
 interface UseSearchStateOptions extends Omit<SearchProps, 'basePathUrl'> {
   /** Called after a result is selected and navigation is triggered. */
@@ -53,6 +74,7 @@ export const useSearchState = ({
   const isMounted = useMountedState();
 
   const [initialLoad, setInitialLoad] = useState(false);
+  const [loadGeneration, setLoadGeneration] = useState(0);
   const [searchValue, setSearchValue] = useState<string>('');
   const [options, setOptions] = useState<EuiSelectableTemplateSitewideOption[]>([]);
   const [searchableTypes, setSearchableTypes] = useState<string[]>([]);
@@ -61,6 +83,7 @@ export const useSearchState = ({
 
   const searchSubscription = useRef<Subscription | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
+  const latestResultsRef = useRef<GlobalSearchResult[]>([]);
 
   const setSearchRef = useCallback((ref: HTMLInputElement | null) => {
     searchRef.current = ref;
@@ -89,10 +112,6 @@ export const useSearchState = ({
     };
   }, []);
 
-  const triggerInitialLoad = useCallback(() => {
-    setInitialLoad(true);
-  }, []);
-
   const loadSuggestions = useCallback(
     (term: string) => {
       return getSuggestions({
@@ -104,32 +123,43 @@ export const useSearchState = ({
     [taggingApi, searchableTypes]
   );
 
-  const setDecoratedOptions = useCallback(
+  const updateOptions = useCallback(
     (
-      _options: GlobalSearchResult[],
+      results: GlobalSearchResult[],
       suggestions: SearchSuggestion[],
-      searchTagIds: string[] = []
+      searchTagIds: string[] = [],
+      term = ''
     ) => {
-      setOptions([
-        ...suggestions.map(suggestionToOption),
-        ..._options.map((option) =>
-          resultToOption(
-            option,
-            searchTagIds?.filter((id) => id !== UNKNOWN_TAG_ID) ?? [],
-            taggingApi?.ui.getTagList
-          )
-        ),
-      ]);
+      const recent = filterRecentPagesForTerm(getRecentPages(), term);
+      const buckets = organizeGlobalSearchResults({ results, recent, term });
+
+      setOptions(
+        buildSelectableOptionsFromBuckets({
+          buckets,
+          bucketTitles,
+          suggestions,
+          searchTagIds,
+          getTagList: taggingApi?.ui.getTagList,
+        })
+      );
     },
-    [setOptions, taggingApi]
+    [taggingApi]
   );
+
+  const triggerInitialLoad = useCallback(() => {
+    setInitialLoad(true);
+    setLoadGeneration((generation) => generation + 1);
+    // Show Recent immediately; do not wait for the debounced find() round-trip.
+    updateOptions(latestResultsRef.current, [], [], '');
+    setIsLoading(true);
+  }, [updateOptions]);
 
   useDebounce(
     () => {
       if (initialLoad) {
         // cancel pending search if not completed yet
         if (searchSubscription.current) {
-          searchSubscription.current.unsubscribe();
+          searchSubscription.current?.unsubscribe();
           searchSubscription.current = null;
         }
 
@@ -141,7 +171,8 @@ export const useSearchState = ({
           setSearchCharLimitExceeded(false);
         }
 
-        const suggestions = loadSuggestions(searchValue.toLowerCase());
+        const normalizedTerm = searchValue.toLowerCase();
+        const suggestions = loadSuggestions(normalizedTerm);
 
         let aggregatedResults: GlobalSearchResult[] = [];
 
@@ -149,7 +180,7 @@ export const useSearchState = ({
           reportEvent.searchRequest();
         }
 
-        const rawParams = parseSearchParams(searchValue.toLowerCase(), searchableTypes);
+        const rawParams = parseSearchParams(normalizedTerm, searchableTypes);
         let tagIds: string[] | undefined;
         if (taggingApi && rawParams.filters.tags) {
           tagIds = rawParams.filters.tags.map(
@@ -171,15 +202,29 @@ export const useSearchState = ({
             }
 
             if (searchValue.length > 0) {
-              aggregatedResults = [...results, ...aggregatedResults].sort(sort.byScore);
-              setDecoratedOptions(aggregatedResults, suggestions, searchParams.tags);
+              aggregatedResults = [...results, ...aggregatedResults].sort(
+                (a, b) => b.score - a.score
+              );
+              latestResultsRef.current = aggregatedResults;
+              updateOptions(aggregatedResults, suggestions, searchParams.tags, normalizedTerm);
               return;
             }
 
-            // if searchbar is empty, filter to only applications and sort alphabetically
-            results = results.filter(({ type }: GlobalSearchResult) => type === 'application');
-            aggregatedResults = [...results, ...aggregatedResults].sort(sort.byTitle);
-            setDecoratedOptions(aggregatedResults, suggestions, searchParams.tags);
+            // Empty query: only indexed navigation pages (applications)
+            const applicationResults = results.filter(({ type }) => type === 'application');
+            const seenUrls = new Set(aggregatedResults.map((result) => result.url));
+            aggregatedResults = [
+              ...applicationResults.filter((result) => {
+                if (seenUrls.has(result.url)) {
+                  return false;
+                }
+                seenUrls.add(result.url);
+                return true;
+              }),
+              ...aggregatedResults,
+            ];
+            latestResultsRef.current = aggregatedResults;
+            updateOptions(aggregatedResults, suggestions, searchParams.tags, '');
           },
           error: (err) => {
             setIsLoading(false);
@@ -199,7 +244,7 @@ export const useSearchState = ({
       }
     },
     350,
-    [searchValue, loadSuggestions, searchableTypes, initialLoad]
+    [searchValue, loadSuggestions, searchableTypes, initialLoad, loadGeneration, updateOptions]
   );
 
   const onResultSelectRef = useRef(onResultSelect);
@@ -230,6 +275,24 @@ export const useSearchState = ({
       if (type === '__suggestion__') {
         setSearchValue(suggestion);
         return;
+      }
+
+      const matchedResult =
+        latestResultsRef.current.find(
+          (result) => result.url === url || result.id === selected.key
+        ) ??
+        getRecentPages().find((result) => result.url === url || result.id === selected.key);
+
+      if (matchedResult) {
+        recordRecentPage(matchedResult);
+      } else if (url && type && type !== '__suggestion__' && selectedLabel) {
+        recordRecentPage({
+          id: String(selected.key ?? url),
+          type,
+          title: selectedLabel,
+          url,
+          score: 100,
+        });
       }
 
       // errors in tracking should not prevent selection behavior

@@ -23,6 +23,7 @@ import { SearchFooter } from './search_footer';
 import { SearchPlaceholder } from './search_placeholder';
 import { useSearchState } from '../hooks/use_search_state';
 import type { SearchModalProps } from './types';
+import { globalSearchBucketHeaderStyles } from '../buckets/bucket_header_styles';
 import { EmptyMessage } from './empty_message';
 import { SEARCH_MODAL_ROW_HEIGHT_PX, SEARCH_MODAL_SELECTOR_PREFIX } from './types';
 import { CharLimitExceededMessage } from './char_limit_exceeded_message';
@@ -82,6 +83,8 @@ export const SearchModalInternal = ({
       flex-direction: column;
       justify-content: ${isLoading || options.length === 0 ? 'center' : 'flex-start'};
     }
+
+    ${globalSearchBucketHeaderStyles({ euiTheme })}
   `;
 
   const footerStyles = css`
@@ -100,6 +103,8 @@ export const SearchModalInternal = ({
       listProps={{
         rowHeight: SEARCH_MODAL_ROW_HEIGHT_PX,
         showIcons: false,
+        // Bucket headers use natural height; fixed row heights apply only when virtualized.
+        isVirtualized: false,
       }}
       height="full"
       searchProps={{

@@ -59,6 +59,7 @@ export class GlobalSearchBarPlugin implements Plugin<{}, {}, {}, GlobalSearchBar
     };
 
     let activeModalRef: OverlayRef | null = null;
+    let modalSessionId = 0;
 
     const closeModal = () => {
       activeModalRef?.close();
@@ -71,9 +72,12 @@ export class GlobalSearchBarPlugin implements Plugin<{}, {}, {}, GlobalSearchBar
         return;
       }
 
+      modalSessionId += 1;
+
       activeModalRef = core.overlays.openModal(
         toMountPoint(
           <SearchModal
+            key={modalSessionId}
             {...searchProps}
             onClose={() => {
               closeModal();

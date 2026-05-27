@@ -1,0 +1,33 @@
+/*
+ * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+ * or more contributor license agreements. Licensed under the Elastic License
+ * 2.0; you may not use this file except in compliance with the Elastic License
+ * 2.0.
+ */
+
+import type { GlobalSearchResult } from '../types';
+
+/** Indexed Kibana apps and deep links from the applications provider. */
+export const GLOBAL_SEARCH_BUCKET_NAVIGATE = 'navigate' as const;
+
+/** Recently opened pages (client-local). */
+export const GLOBAL_SEARCH_BUCKET_RECENT = 'recent' as const;
+
+/** Saved objects and other provider hits (non-application). */
+export const GLOBAL_SEARCH_BUCKET_RESULTS = 'results' as const;
+
+export type GlobalSearchBucketId =
+  | typeof GLOBAL_SEARCH_BUCKET_NAVIGATE
+  | typeof GLOBAL_SEARCH_BUCKET_RECENT
+  | typeof GLOBAL_SEARCH_BUCKET_RESULTS;
+
+export interface GlobalSearchBucket {
+  id: GlobalSearchBucketId;
+  items: GlobalSearchResult[];
+}
+
+export interface OrganizeGlobalSearchResultsParams {
+  results: GlobalSearchResult[];
+  recent: GlobalSearchResult[];
+  term: string;
+}
