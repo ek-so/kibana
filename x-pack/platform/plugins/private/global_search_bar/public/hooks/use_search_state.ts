@@ -5,10 +5,10 @@
  * 2.0.
  */
 
-import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
+import type { EuiSelectableProps, EuiSelectableTemplateSitewideOption } from '@elastic/eui';
 import type { EuiSelectableOnChangeEvent } from '@elastic/eui/src/components/selectable/selectable';
-import type { RefObject } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import type { MouseEvent, RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Subscription } from 'rxjs';
 import type {
   GlobalSearchBucketId,
@@ -60,9 +60,29 @@ export interface SearchStateResult {
   triggerInitialLoad: () => void;
   onChange: (
     selection: EuiSelectableTemplateSitewideOption[],
-    event: EuiSelectableOnChangeEvent
+    event: EuiSelectableOnChangeEvent,
+    changedOption?: EuiSelectableTemplateSitewideOption
   ) => void;
+  onActiveOptionChange: NonNullable<EuiSelectableProps['onActiveOptionChange']>;
+  selectableListProps: NonNullable<EuiSelectableProps['listProps']>;
 }
+
+const getSelectableRank = (
+  selection: EuiSelectableTemplateSitewideOption[],
+  selected: EuiSelectableTemplateSitewideOption
+): number | null => {
+  let rank = 0;
+  for (const option of selection) {
+    if (option.isGroupLabel) {
+      continue;
+    }
+    rank += 1;
+    if (option.key === selected.key && option.label === selected.label) {
+      return rank;
+    }
+  }
+  return null;
+};
 
 export const useSearchState = ({
   globalSearch,
@@ -250,21 +270,26 @@ export const useSearchState = ({
   const onResultSelectRef = useRef(onResultSelect);
   onResultSelectRef.current = onResultSelect;
 
-  const onChange = useCallback(
-    (selection: EuiSelectableTemplateSitewideOption[], event: EuiSelectableOnChangeEvent) => {
-      let selectedRank: number | null = null;
-      const selected = selection.find(({ checked }, rank) => {
-        const isChecked = checked === 'on';
-        if (isChecked) {
-          selectedRank = rank + 1;
-        }
-        return isChecked;
-      });
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
 
-      if (!selected) {
+  // EuiSelectable highlights options on mousedown before click. When the search input is focused,
+  // that focus transition can swallow the click, so we navigate on pointer activation instead.
+  const isPointerSelectRef = useRef(false);
+  const pointerSelectHandledRef = useRef(false);
+  const pointerEventRef = useRef<EuiSelectableOnChangeEvent | null>(null);
+
+  const handleOptionSelect = useCallback(
+    (
+      selected: EuiSelectableTemplateSitewideOption,
+      event: EuiSelectableOnChangeEvent,
+      selection: EuiSelectableTemplateSitewideOption[] = optionsRef.current
+    ) => {
+      if (selected.isGroupLabel) {
         return;
       }
 
+      const selectedRank = getSelectableRank(selection, selected);
       const selectedLabel = selected.label ?? null;
 
       // @ts-ignore - ts error is "union type is too complex to express"
@@ -337,6 +362,60 @@ export const useSearchState = ({
     [reportEvent, navigateToUrl, searchValue]
   );
 
+  const selectableListProps = useMemo(
+    (): NonNullable<EuiSelectableProps['listProps']> => ({
+      onMouseDown: (event: MouseEvent) => {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('.euiSelectableListItem')) {
+          isPointerSelectRef.current = true;
+          pointerEventRef.current = event.nativeEvent;
+        }
+      },
+    }),
+    []
+  );
+
+  const onActiveOptionChange = useCallback<
+    NonNullable<EuiSelectableProps['onActiveOptionChange']>
+  >(
+    (option) => {
+      if (!isPointerSelectRef.current || !option || option.isGroupLabel) {
+        return;
+      }
+
+      isPointerSelectRef.current = false;
+      pointerSelectHandledRef.current = true;
+      handleOptionSelect(option, pointerEventRef.current ?? new MouseEvent('click'));
+      pointerEventRef.current = null;
+    },
+    [handleOptionSelect]
+  );
+
+  const onChange = useCallback(
+    (
+      selection: EuiSelectableTemplateSitewideOption[],
+      event: EuiSelectableOnChangeEvent,
+      changedOption?: EuiSelectableTemplateSitewideOption
+    ) => {
+      if (pointerSelectHandledRef.current) {
+        pointerSelectHandledRef.current = false;
+        return;
+      }
+
+      const selected =
+        changedOption && !changedOption.isGroupLabel
+          ? changedOption
+          : selection.find(({ checked, isGroupLabel }) => checked === 'on' && !isGroupLabel);
+
+      if (!selected) {
+        return;
+      }
+
+      handleOptionSelect(selected, event, selection);
+    },
+    [handleOptionSelect]
+  );
+
   return {
     searchValue,
     setSearchValue,
@@ -344,6 +423,8 @@ export const useSearchState = ({
     isLoading,
     searchCharLimitExceeded,
     onChange,
+    onActiveOptionChange,
+    selectableListProps,
     setSearchRef,
     searchRef,
     triggerInitialLoad,

@@ -59,6 +59,8 @@ export const SearchBar = ({
     isLoading,
     searchCharLimitExceeded,
     onChange,
+    onActiveOptionChange,
+    selectableListProps,
     setSearchRef,
     searchRef,
     triggerInitialLoad,
@@ -159,13 +161,15 @@ export const SearchBar = ({
       isLoading={isLoading}
       isPreFiltered
       onChange={onChange}
+      onActiveOptionChange={onActiveOptionChange}
       options={options}
       css={styles}
       popoverButtonBreakpoints={['xs', 's']}
-      singleSelection={true}
+      singleSelection="always"
       renderOption={(option) => euiSelectableTemplateSitewideRenderOptions(option, searchValue)}
       colorModes={chromeStyle !== 'project' ? { search: 'dark', popover: 'global' } : undefined}
       listProps={{
+        ...selectableListProps,
         className: 'eui-yScroll',
         isVirtualized: false,
         css: css`

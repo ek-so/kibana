@@ -308,4 +308,66 @@ describe('useSearchState', () => {
     const labelsAfterLateEmit = getSelectableLabels(result.current.options);
     expect(labelsAfterLateEmit).toEqual(['Map', 'Visualize']);
   });
+
+  it('navigates when EUI passes a clicked option without checked state', async () => {
+    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+
+    const { result } = renderHook(() =>
+      useSearchState({
+        globalSearch,
+        navigateToUrl,
+        reportEvent,
+      })
+    );
+
+    await triggerInitialLoadAndRunDebounce(result);
+
+    const clickedOption = {
+      key: 'discover',
+      label: 'Discover',
+      url: '/app/discover',
+      type: 'application',
+    };
+
+    act(() => {
+      result.current.onChange([clickedOption], {} as MouseEvent, clickedOption);
+    });
+
+    expect(navigateToUrl).toHaveBeenCalledWith('/app/discover');
+  });
+
+  it('navigates on pointer activation via onActiveOptionChange', async () => {
+    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+
+    const { result } = renderHook(() =>
+      useSearchState({
+        globalSearch,
+        navigateToUrl,
+        reportEvent,
+      })
+    );
+
+    await triggerInitialLoadAndRunDebounce(result);
+
+    const clickedOption = {
+      key: 'discover',
+      label: 'Discover',
+      url: '/app/discover',
+      type: 'application',
+    };
+
+    act(() => {
+      const listItem = document.createElement('div');
+      listItem.className = 'euiSelectableListItem';
+      listItem.closest = () => listItem;
+
+      result.current.selectableListProps.onMouseDown?.({
+        target: listItem,
+        nativeEvent: new MouseEvent('mousedown'),
+      } as unknown as React.MouseEvent);
+      result.current.onActiveOptionChange?.(clickedOption);
+    });
+
+    expect(navigateToUrl).toHaveBeenCalledWith('/app/discover');
+  });
 });

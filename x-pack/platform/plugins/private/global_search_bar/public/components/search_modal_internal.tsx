@@ -17,7 +17,7 @@ import {
   useEuiTheme,
 } from '@elastic/eui';
 import { css } from '@emotion/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { i18nStrings } from '../strings';
 import { SearchFooter } from './search_footer';
 import { SearchPlaceholder } from './search_placeholder';
@@ -46,6 +46,8 @@ export const SearchModalInternal = ({
     isLoading,
     searchCharLimitExceeded,
     onChange,
+    onActiveOptionChange,
+    selectableListProps,
     setSearchRef,
     triggerInitialLoad,
   } = useSearchState({
@@ -64,10 +66,18 @@ export const SearchModalInternal = ({
     };
   }, [triggerInitialLoad, reportEvent]);
 
-  const formattedOptions = options.map((option) => ({
-    ...option,
-    prepend: option.icon ? <EuiIcon color="subdued" size="l" {...option.icon} /> : option.prepend,
-  }));
+  const formattedOptions = useMemo(
+    () =>
+      options.map((option) => ({
+        ...option,
+        prepend: option.icon ? (
+          <EuiIcon color="subdued" size="l" {...option.icon} />
+        ) : (
+          option.prepend
+        ),
+      })),
+    [options]
+  );
 
   const headerStyles = css`
     ${mediumAndUpBreakpoint} {
@@ -97,10 +107,12 @@ export const SearchModalInternal = ({
       isLoading={isLoading}
       isPreFiltered
       onChange={onChange}
+      onActiveOptionChange={onActiveOptionChange}
       options={formattedOptions}
-      singleSelection={true}
+      singleSelection="always"
       renderOption={(option) => euiSelectableTemplateSitewideRenderOptions(option, searchValue)}
       listProps={{
+        ...selectableListProps,
         rowHeight: SEARCH_MODAL_ROW_HEIGHT_PX,
         showIcons: false,
         // Bucket headers use natural height; fixed row heights apply only when virtualized.
