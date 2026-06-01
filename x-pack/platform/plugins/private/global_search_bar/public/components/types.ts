@@ -15,7 +15,10 @@ import type { EventReporter } from '../telemetry';
 export const SEARCH_MODAL_SELECTOR_PREFIX = 'chromeProjectNextSearchModal';
 export const SEARCH_MODAL_HEIGHT_VH = 50;
 export const SEARCH_MODAL_WIDTH_PX = 800;
-export const SEARCH_MODAL_ROW_HEIGHT_PX = 68;
+/** Row height for virtualized global search lists (EuiSelectableTemplateSitewide default). */
+export const GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX = 40;
+
+export const SEARCH_MODAL_ROW_HEIGHT_PX = GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX;
 
 export interface ProjectNavigationState {
   navigationTree: NavigationTreeDefinitionUI;

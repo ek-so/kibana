@@ -34,6 +34,7 @@ import { parseSearchParams } from '../search_syntax';
 import { buildSelectableOptionsFromBuckets } from '../buckets/build_selectable_options';
 import type { GlobalSearchResultsView } from '../buckets/build_selectable_options';
 import { getRecentPages, recordRecentPage } from '../recent/recent_store';
+import { GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX } from '../components/types';
 import { i18nStrings } from '../strings';
 
 const UNKNOWN_TAG_ID = '__unknown__';
@@ -429,6 +430,8 @@ export const useSearchState = ({
 
   const selectableListProps = useMemo(
     (): NonNullable<EuiSelectableProps['listProps']> => ({
+      rowHeight: GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX,
+      isVirtualized: true,
       onMouseDown: (event: MouseEvent) => {
         const target = event.target as HTMLElement | null;
         if (target?.closest('.euiSelectableListItem')) {

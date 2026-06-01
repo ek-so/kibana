@@ -29,7 +29,7 @@ import { EmptyMessage } from './empty_message';
 import { SearchPlaceholder } from './search_placeholder';
 import { CharLimitExceededMessage } from './char_limit_exceeded_message';
 import { SearchFooter } from './search_footer';
-import { globalSearchBucketHeaderStyles } from '../buckets/bucket_header_styles';
+import { globalSearchSelectableListStyles } from '../lib/global_search_list_styles';
 import { useSearchState } from '../hooks/use_search_state';
 import { blurEvent } from '.';
 
@@ -175,11 +175,10 @@ export const SearchBar = ({
       listProps={{
         ...selectableListProps,
         className: 'eui-yScroll',
-        isVirtualized: false,
         css: css`
           max-block-size: 75vh;
 
-          ${globalSearchBucketHeaderStyles({ euiTheme })}
+          ${globalSearchSelectableListStyles({ euiTheme })}
         `,
       }}
       searchProps={{

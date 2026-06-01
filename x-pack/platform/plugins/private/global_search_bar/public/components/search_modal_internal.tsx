@@ -22,9 +22,9 @@ import { SearchFooter } from './search_footer';
 import { SearchPlaceholder } from './search_placeholder';
 import { useSearchState } from '../hooks/use_search_state';
 import type { SearchModalProps } from './types';
-import { globalSearchBucketHeaderStyles } from '../buckets/bucket_header_styles';
+import { globalSearchSelectableListStyles } from '../lib/global_search_list_styles';
 import { EmptyMessage } from './empty_message';
-import { SEARCH_MODAL_ROW_HEIGHT_PX, SEARCH_MODAL_SELECTOR_PREFIX } from './types';
+import { SEARCH_MODAL_SELECTOR_PREFIX } from './types';
 import { CharLimitExceededMessage } from './char_limit_exceeded_message';
 
 export const SearchModalInternal = ({
@@ -84,7 +84,7 @@ export const SearchModalInternal = ({
       justify-content: ${isLoading || options.length === 0 ? 'center' : 'flex-start'};
     }
 
-    ${globalSearchBucketHeaderStyles({ euiTheme })}
+    ${globalSearchSelectableListStyles({ euiTheme })}
   `;
 
   const footerStyles = css`
@@ -103,10 +103,7 @@ export const SearchModalInternal = ({
       renderOption={(option) => euiSelectableTemplateSitewideRenderOptions(option, searchValue)}
       listProps={{
         ...selectableListProps,
-        rowHeight: SEARCH_MODAL_ROW_HEIGHT_PX,
         showIcons: false,
-        // Bucket headers use natural height; fixed row heights apply only when virtualized.
-        isVirtualized: false,
       }}
       height="full"
       searchProps={{
