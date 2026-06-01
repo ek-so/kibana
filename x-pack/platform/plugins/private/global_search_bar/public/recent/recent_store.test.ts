@@ -6,11 +6,7 @@
  */
 
 import type { GlobalSearchResult } from '@kbn/global-search-plugin/public';
-import {
-  filterRecentPagesForTerm,
-  getRecentPages,
-  recordRecentPage,
-} from './recent_store';
+import { getRecentPages, recordRecentPage } from './recent_store';
 
 const createResult = (partial: Partial<GlobalSearchResult> & Pick<GlobalSearchResult, 'url'>): GlobalSearchResult => ({
   id: partial.id ?? 'id',
@@ -63,12 +59,4 @@ describe('recent_store', () => {
     expect(getRecentPages(spaceId).map((page) => page.title)).toEqual(['A', 'B']);
   });
 
-  it('filters recent pages by term', () => {
-    const recent = [
-      createResult({ title: 'Discover', url: '/app/discover' }),
-      createResult({ title: 'Dashboards', url: '/app/dashboards' }),
-    ];
-
-    expect(filterRecentPagesForTerm(recent, 'disc').map((page) => page.title)).toEqual(['Discover']);
-  });
 });

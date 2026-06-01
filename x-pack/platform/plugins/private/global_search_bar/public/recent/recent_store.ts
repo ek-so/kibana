@@ -77,14 +77,3 @@ export const getRecentPages = (spaceId = getActiveSpaceId()): GlobalSearchResult
     }));
 };
 
-export const filterRecentPagesForTerm = (
-  recent: GlobalSearchResult[],
-  term: string
-): GlobalSearchResult[] => {
-  const normalizedTerm = term.trim().toLowerCase();
-  if (!normalizedTerm) {
-    return recent;
-  }
-
-  return recent.filter((item) => item.title.toLowerCase().includes(normalizedTerm));
-};

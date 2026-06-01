@@ -33,11 +33,7 @@ import type { SearchProps } from '../components/types';
 import { parseSearchParams } from '../search_syntax';
 import { buildSelectableOptionsFromBuckets } from '../buckets/build_selectable_options';
 import type { GlobalSearchResultsView } from '../buckets/build_selectable_options';
-import {
-  filterRecentPagesForTerm,
-  getRecentPages,
-  recordRecentPage,
-} from '../recent/recent_store';
+import { getRecentPages, recordRecentPage } from '../recent/recent_store';
 import { i18nStrings } from '../strings';
 
 const UNKNOWN_TAG_ID = '__unknown__';
@@ -195,7 +191,7 @@ export const useSearchState = ({
       term = ''
     ) => {
       lastUpdateParamsRef.current = { results, suggestions, searchTagIds, term };
-      const recent = filterRecentPagesForTerm(getRecentPages(), term);
+      const recent = getRecentPages();
       const buckets = organizeGlobalSearchResults({ results, recent, term });
 
       setOptions(

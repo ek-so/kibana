@@ -50,7 +50,6 @@ const mockRecordRecentPage = jest.fn();
 jest.mock('../recent/recent_store', () => ({
   ...jest.requireActual('../recent/recent_store'),
   getRecentPages: () => mockGetRecentPages(),
-  filterRecentPagesForTerm: jest.fn((recent: unknown[]) => recent),
   recordRecentPage: (...args: unknown[]) => mockRecordRecentPage(...args),
 }));
 
@@ -340,6 +339,72 @@ describe('useSearchState', () => {
 
     const labelsAfterLateEmit = getSelectableLabels(result.current.options);
     expect(labelsAfterLateEmit).toEqual(['Map', 'Visualize']);
+  });
+
+  it('shows all recent pages while searching, even when the term does not match their title', async () => {
+    mockGetRecentPages.mockReturnValue([
+      createResult({ id: 'visited-dashboard', type: 'dashboard', title: 'Sales Overview' }),
+    ]);
+
+    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+
+    globalSearch.find.mockReturnValueOnce(of(createBatch('Discover')));
+
+    const { result } = renderHook(() =>
+      useSearchState({
+        globalSearch,
+        navigateToUrl,
+        reportEvent,
+      })
+    );
+
+    await triggerInitialLoadAndRunDebounce(result);
+
+    act(() => {
+      result.current.setSearchValue('discover');
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(350);
+    });
+
+    const labels = getSelectableLabels(result.current.options);
+    expect(labels).toContain('Sales Overview');
+    expect(labels).toContain('Discover');
+  });
+
+  it('records a visited page when a search result is selected', async () => {
+    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+
+    const { result } = renderHook(() =>
+      useSearchState({
+        globalSearch,
+        navigateToUrl,
+        reportEvent,
+      })
+    );
+
+    await triggerInitialLoadAndRunDebounce(result);
+
+    const clickedOption = {
+      key: 'my-dashboard',
+      label: 'My Dashboard',
+      url: '/app/dashboards#/view/abc',
+      type: 'dashboard',
+    };
+
+    act(() => {
+      result.current.onChange([clickedOption], {} as MouseEvent, clickedOption);
+    });
+
+    expect(mockRecordRecentPage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'my-dashboard',
+        title: 'My Dashboard',
+        url: '/app/dashboards#/view/abc',
+        type: 'dashboard',
+      })
+    );
   });
 
   it('navigates when EUI passes a clicked option without checked state', async () => {
