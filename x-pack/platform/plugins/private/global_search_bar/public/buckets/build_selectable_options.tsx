@@ -13,6 +13,7 @@ import {
   type GlobalSearchBucket,
   type GlobalSearchBucketId,
 } from '@kbn/global-search-plugin/public';
+import type { NavigationParentContext } from '@kbn/core-chrome-browser';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import type { SearchSuggestion } from '../suggestions';
 import { resultToOption, suggestionToOption } from '../lib';
@@ -33,15 +34,15 @@ const buildResultOptions = ({
   items,
   searchTagIds,
   getTagList,
-  getNavigationParentTitle,
+  getNavigationParent,
 }: {
   items: GlobalSearchBucket['items'];
   searchTagIds: string[];
   getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList'];
-  getNavigationParentTitle?: (url: string) => string | undefined;
+  getNavigationParent?: (url: string) => NavigationParentContext;
 }): EuiSelectableTemplateSitewideOption[] =>
   items.map((item) => ({
-    ...resultToOption(item, searchTagIds, getTagList, getNavigationParentTitle),
+    ...resultToOption(item, searchTagIds, getTagList, getNavigationParent),
     'data-test-subj': `nav-search-option`,
   }));
 
@@ -51,7 +52,7 @@ export const buildSelectableOptionsFromBuckets = ({
   suggestions,
   searchTagIds,
   getTagList,
-  getNavigationParentTitle,
+  getNavigationParent,
   view = 'main',
   onShowAllRecent,
   onBackToMain,
@@ -61,7 +62,7 @@ export const buildSelectableOptionsFromBuckets = ({
   suggestions: SearchSuggestion[];
   searchTagIds: string[];
   getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList'];
-  getNavigationParentTitle?: (url: string) => string | undefined;
+  getNavigationParent?: (url: string) => NavigationParentContext;
   view?: GlobalSearchResultsView;
   onShowAllRecent?: () => void;
   onBackToMain?: () => void;
@@ -81,7 +82,7 @@ export const buildSelectableOptionsFromBuckets = ({
         prepend: onBackToMain ? <RecentBucketBackButton onClick={onBackToMain} /> : undefined,
         'data-test-subj': `global-search-bucket-${GLOBAL_SEARCH_BUCKET_RECENT}-all`,
       },
-      ...buildResultOptions({ items: recentItems, searchTagIds, getTagList, getNavigationParentTitle }),
+      ...buildResultOptions({ items: recentItems, searchTagIds, getTagList, getNavigationParent }),
     ];
   }
 
@@ -116,7 +117,7 @@ export const buildSelectableOptionsFromBuckets = ({
       'data-test-subj': `global-search-bucket-${bucket.id}`,
     });
 
-    options.push(...buildResultOptions({ items: visibleItems, searchTagIds, getTagList, getNavigationParentTitle }));
+    options.push(...buildResultOptions({ items: visibleItems, searchTagIds, getTagList, getNavigationParent }));
   }
 
   return options;

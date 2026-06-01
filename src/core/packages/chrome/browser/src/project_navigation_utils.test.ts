@@ -9,7 +9,7 @@
 
 import type { NavigationTreeDefinitionUI } from './project_navigation';
 import type { ChromeNavLink } from './nav_links';
-import { getNavigationParentTitleForUrl } from './project_navigation_utils';
+import { getNavigationParentForUrl, getNavigationParentTitleForUrl } from './project_navigation_utils';
 
 const getDeepLink = (id: string, url: string): ChromeNavLink => ({
   id,
@@ -38,6 +38,7 @@ describe('getNavigationParentTitleForUrl', () => {
         id: 'discover',
         title: 'Discover',
         path: 'discover',
+        icon: 'productDiscover',
         deepLink: getDeepLink('discover', '/foo/app/discover'),
       },
       {
@@ -56,13 +57,25 @@ describe('getNavigationParentTitleForUrl', () => {
     ],
   };
 
-  it('returns undefined for top-level navigation items', () => {
+  it('returns undefined parent title for top-level navigation items', () => {
     expect(
       getNavigationParentTitleForUrl({
         url: '/foo/app/discover',
         navigationTree,
       })
     ).toBeUndefined();
+  });
+
+  it('returns the active nav item icon for top-level items', () => {
+    expect(
+      getNavigationParentForUrl({
+        url: '/foo/app/discover',
+        navigationTree,
+      })
+    ).toEqual({
+      icon: 'productDiscover',
+      matchedInNavigation: true,
+    });
   });
 
   it('returns the parent title for nested navigation items', () => {
@@ -81,6 +94,7 @@ describe('getNavigationParentTitleForUrl', () => {
         {
           id: 'stack_management',
           title: 'Stack Management',
+          icon: 'gear',
           breadcrumbStatus: 'hidden',
           renderAs: 'panelOpener',
           children: [
@@ -110,6 +124,60 @@ describe('getNavigationParentTitleForUrl', () => {
         navigationTree: stackManagementTree,
       })
     ).toBe('Stack Management');
+  });
+
+  it('returns the parent navigation icon for deeply nested items', () => {
+    const stackManagementTree: NavigationTreeDefinitionUI = {
+      id: 'es',
+      footer: [
+        {
+          id: 'stack_management',
+          title: 'Stack Management',
+          icon: 'gear',
+          breadcrumbStatus: 'hidden',
+          renderAs: 'panelOpener',
+          children: [
+            {
+              id: 'stack_management_home',
+              title: '',
+              children: [],
+            },
+            {
+              title: 'Cluster performance',
+              children: [
+                {
+                  id: 'monitoring',
+                  title: 'Stack Monitoring',
+                  deepLink: getDeepLink('monitoring', '/foo/app/monitoring'),
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(
+      getNavigationParentForUrl({
+        url: '/foo/app/monitoring',
+        navigationTree: stackManagementTree,
+      })
+    ).toEqual({
+      title: 'Stack Management',
+      icon: 'gear',
+      matchedInNavigation: true,
+    });
+  });
+
+  it('reports when a URL is not in the navigation tree', () => {
+    expect(
+      getNavigationParentForUrl({
+        url: '/foo/app/unknown-dashboard',
+        navigationTree,
+      })
+    ).toEqual({
+      matchedInNavigation: false,
+    });
   });
 
   it('returns undefined when the URL does not match the navigation tree', () => {

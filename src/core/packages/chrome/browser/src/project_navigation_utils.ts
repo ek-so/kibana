@@ -7,11 +7,21 @@
  * License v3.0 only", or the "Server Side Public License, v 1".
  */
 
+import type { IconType } from '@elastic/eui';
 import type { Location } from 'history';
 import type {
   ChromeProjectNavigationNode,
   NavigationTreeDefinitionUI,
 } from './project_navigation';
+
+export interface NavigationParentContext {
+  /** Parent section title for the append area (omitted for top-level items). */
+  title?: string;
+  /** Prepend icon from the navigation tree (parent or active item). */
+  icon?: IconType;
+  /** Whether the URL matched a node in the project navigation tree. */
+  matchedInNavigation: boolean;
+}
 
 const wrapIdx = (index: number): string => `[${index}]`;
 
@@ -140,14 +150,94 @@ const parseUrlForNavigation = (
   };
 };
 
+const getNavigationNodeIcon = (node: ChromeProjectNavigationNode): IconType | undefined => {
+  if (node.icon) {
+    return node.icon;
+  }
+
+  if (node.deepLink?.euiIconType) {
+    return node.deepLink.euiIconType;
+  }
+
+  if (node.deepLink?.icon) {
+    return node.deepLink.icon;
+  }
+
+  return undefined;
+};
+
+const getActivePathWithTitleForUrl = ({
+  url,
+  navigationTree,
+  prependBasePath = (path) => path,
+}: {
+  url: string;
+  navigationTree: NavigationTreeDefinitionUI;
+  prependBasePath?: (path: string) => string;
+}): ChromeProjectNavigationNode[] => {
+  const navNodes = [...(navigationTree.body ?? []), ...(navigationTree.footer ?? [])];
+  if (navNodes.length === 0) {
+    return [];
+  }
+
+  const { serializedPath, location } = parseUrlForNavigation(url);
+  const flattened = flattenNav(navNodes);
+  const activeNodes = findActiveNodes(serializedPath, flattened, location, prependBasePath);
+  const activePath = activeNodes[0] ?? [];
+
+  return activePath.filter((node) => Boolean(node.title));
+};
+
 /**
- * Returns a higher-level parent navigation title for a given URL, based on the
- * current solution's project navigation tree.
+ * Returns navigation context for global search result cells for a given URL.
  *
- * For shallow paths (e.g. Machine Learning → Anomaly Detection), returns the
- * immediate parent. For deeper paths (e.g. Stack Management → Cluster performance
- * → Stack Monitoring), skips the intermediate section and returns the panel-level
- * ancestor (Stack Management).
+ * - **append `title`**: parent section (same rules as before). Omitted for top-level items.
+ * - **prepend `icon`**: parent icon when nested; otherwise the active nav item icon
+ *   (e.g. `productDiscover` for Discover).
+ *
+ * For shallow paths (e.g. Machine Learning → Anomaly Detection), the parent is the
+ * immediate ancestor. For deeper paths (e.g. Stack Management → Cluster performance
+ * → Stack Monitoring), the parent is the panel-level ancestor (Stack Management).
+ */
+export const getNavigationParentForUrl = ({
+  url,
+  navigationTree,
+  prependBasePath = (path) => path,
+}: {
+  url: string;
+  navigationTree: NavigationTreeDefinitionUI;
+  prependBasePath?: (path: string) => string;
+}): NavigationParentContext => {
+  const pathWithTitle = getActivePathWithTitleForUrl({ url, navigationTree, prependBasePath });
+
+  if (pathWithTitle.length === 0) {
+    return { matchedInNavigation: false };
+  }
+
+  const leafNode = pathWithTitle[pathWithTitle.length - 1];
+  const leafIcon = getNavigationNodeIcon(leafNode);
+
+  if (pathWithTitle.length < 2) {
+    return {
+      matchedInNavigation: true,
+      ...(leafIcon ? { icon: leafIcon } : {}),
+    };
+  }
+
+  const parentIndex =
+    pathWithTitle.length >= 3 ? pathWithTitle.length - 3 : pathWithTitle.length - 2;
+  const parentNode = pathWithTitle[parentIndex];
+
+  return {
+    matchedInNavigation: true,
+    title: parentNode.title,
+    icon: getNavigationNodeIcon(parentNode) ?? leafIcon,
+  };
+};
+
+/**
+ * Returns a higher-level parent navigation title for a given URL.
+ * @see getNavigationParentForUrl
  */
 export const getNavigationParentTitleForUrl = ({
   url,
@@ -158,23 +248,5 @@ export const getNavigationParentTitleForUrl = ({
   navigationTree: NavigationTreeDefinitionUI;
   prependBasePath?: (path: string) => string;
 }): string | undefined => {
-  const navNodes = [...(navigationTree.body ?? []), ...(navigationTree.footer ?? [])];
-  if (navNodes.length === 0) {
-    return undefined;
-  }
-
-  const { serializedPath, location } = parseUrlForNavigation(url);
-  const flattened = flattenNav(navNodes);
-  const activeNodes = findActiveNodes(serializedPath, flattened, location, prependBasePath);
-  const activePath = activeNodes[0] ?? [];
-  const pathWithTitle = activePath.filter((node) => Boolean(node.title));
-
-  if (pathWithTitle.length < 2) {
-    return undefined;
-  }
-
-  const parentIndex =
-    pathWithTitle.length >= 3 ? pathWithTitle.length - 3 : pathWithTitle.length - 2;
-
-  return pathWithTitle[parentIndex].title;
+  return getNavigationParentForUrl({ url, navigationTree, prependBasePath }).title;
 };

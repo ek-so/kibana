@@ -69,11 +69,25 @@ describe('resultToOption', () => {
     );
   });
 
-  it('does not use icon for other types', () => {
+  it('uses a grid icon for items not in the navigation menu', () => {
     const input = createSearchResult({ type: 'dashboard', icon: 'dash-icon' });
+    const option = resultToOption(input, [], undefined, () => ({ matchedInNavigation: false }));
+
+    expect(option.icon).toEqual({ type: 'grid' });
+  });
+
+  it('keeps the integration icon when not in the navigation menu', () => {
+    const input = createSearchResult({ type: 'integration', icon: 'integ-icon' });
+    const option = resultToOption(input, [], undefined, () => ({ matchedInNavigation: false }));
+
+    expect(option.icon).toEqual({ type: 'integ-icon' });
+  });
+
+  it('uses the provider icon for applications not in the menu when navigation is unavailable', () => {
+    const input = createSearchResult({ type: 'application', icon: 'logoKibana' });
     expect(resultToOption(input, [])).toEqual(
       expect.objectContaining({
-        icon: { type: 'empty' },
+        icon: { type: 'logoKibana' },
       })
     );
   });
@@ -121,7 +135,10 @@ describe('resultToOption', () => {
 
   it('adds the navigation parent title to the append area', () => {
     const input = createSearchResult({ url: '/app/ml/anomaly_detection' });
-    const option = resultToOption(input, [], undefined, () => 'Machine Learning');
+    const option = resultToOption(input, [], undefined, () => ({
+      title: 'Machine Learning',
+      matchedInNavigation: true,
+    }));
 
     expect(option.append).toMatchInlineSnapshot(`
       <GlobalSearchResultAppend
@@ -130,5 +147,48 @@ describe('resultToOption', () => {
         tags={Array []}
       />
     `);
+  });
+
+  it('uses the navigation parent icon as the cell prepend when available', () => {
+    const input = createSearchResult({
+      url: '/app/monitoring',
+      type: 'application',
+      icon: 'monitoringApp',
+    });
+    const option = resultToOption(input, [], undefined, () => ({
+      title: 'Stack Management',
+      icon: 'gear',
+      matchedInNavigation: true,
+    }));
+
+    expect(option.icon).toEqual({ type: 'gear' });
+  });
+
+  it('uses the active nav item icon for top-level items', () => {
+    const input = createSearchResult({
+      url: '/app/discover',
+      type: 'application',
+      icon: 'oldDiscoverIcon',
+    });
+    const option = resultToOption(input, [], undefined, () => ({
+      icon: 'productDiscover',
+      matchedInNavigation: true,
+    }));
+
+    expect(option.icon).toEqual({ type: 'productDiscover' });
+  });
+
+  it('falls back to the result icon when the navigation parent has no icon', () => {
+    const input = createSearchResult({
+      url: '/app/ml/anomaly_detection',
+      type: 'application',
+      icon: 'machineLearningApp',
+    });
+    const option = resultToOption(input, [], undefined, () => ({
+      title: 'Machine Learning',
+      matchedInNavigation: true,
+    }));
+
+    expect(option.icon).toEqual({ type: 'machineLearningApp' });
   });
 });

@@ -7,34 +7,36 @@
 
 import React from 'react';
 import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
+import type { NavigationParentContext } from '@kbn/core-chrome-browser';
 import type { GlobalSearchResult } from '@kbn/global-search-plugin/common/types';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import type { Tag } from '@kbn/saved-objects-tagging-oss-plugin/common';
 import { GlobalSearchResultAppend } from '../components/global_search_result_append';
+import { resolveGlobalSearchPrependIcon } from './global_search_result_icon';
 
 export const resultToOption = (
   result: GlobalSearchResult,
   searchTagIds: string[],
   getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList'],
-  getNavigationParentTitle?: (url: string) => string | undefined
+  getNavigationParent?: (url: string) => NavigationParentContext
 ): EuiSelectableTemplateSitewideOption => {
   const { id, title, url, icon, type, meta = {} } = result;
   const { tagIds = [] } = meta as { tagIds: string[] };
-  // only displaying icons for applications and integrations
-  const useIcon =
-    type === 'application' ||
-    type === 'integration' ||
-    type.toLowerCase() === 'enterprise search' ||
-    type.toLowerCase() === 'elasticsearch' ||
-    type.toLowerCase() === 'search' ||
-    type.toLowerCase() === 'index' ||
-    type.toLowerCase() === 'connector';
+  const navigation = getNavigationParent?.(url);
+  const parentTitle = navigation?.title;
+
   const option: EuiSelectableTemplateSitewideOption = {
     key: id,
     label: title,
     url,
     type,
-    icon: { type: useIcon && icon ? icon : 'empty' },
+    icon: {
+      type: resolveGlobalSearchPrependIcon({
+        type,
+        resultIcon: icon,
+        navigation,
+      }),
+    },
     'data-test-subj': `nav-search-option`,
   };
 
@@ -54,8 +56,6 @@ export const resultToOption = (
       }
     }
   }
-
-  const parentTitle = getNavigationParentTitle?.(result.url);
 
   if (parentTitle || matchedTags.length > 0) {
     option.append = (

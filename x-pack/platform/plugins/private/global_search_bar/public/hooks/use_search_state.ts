@@ -25,7 +25,7 @@ import useDebounce from 'react-use/lib/useDebounce';
 import useObservable from 'react-use/lib/useObservable';
 import { apm } from '@elastic/apm-rum';
 import useMountedState from 'react-use/lib/useMountedState';
-import { getNavigationParentTitleForUrl } from '@kbn/core-chrome-browser';
+import { getNavigationParentForUrl } from '@kbn/core-chrome-browser';
 import { map, of } from 'rxjs';
 import type { SearchSuggestion } from '../suggestions';
 import { getSuggestions } from '../suggestions';
@@ -103,13 +103,13 @@ export const useSearchState = ({
   }, [getNavigation$]);
   const navigationTree = useObservable(navigationTree$, null);
 
-  const getNavigationParentTitle = useCallback(
+  const getNavigationParent = useCallback(
     (url: string) => {
       if (!navigationTree) {
-        return undefined;
+        return { matchedInNavigation: false };
       }
 
-      return getNavigationParentTitleForUrl({
+      return getNavigationParentForUrl({
         url,
         navigationTree,
         prependBasePath,
@@ -201,14 +201,14 @@ export const useSearchState = ({
           suggestions,
           searchTagIds,
           getTagList: taggingApi?.ui.getTagList,
-          getNavigationParentTitle,
+          getNavigationParent,
           view: resultsView,
           onShowAllRecent: showAllRecent,
           onBackToMain: backToMainResults,
         })
       );
     },
-    [taggingApi, resultsView, showAllRecent, backToMainResults, getNavigationParentTitle]
+    [taggingApi, resultsView, showAllRecent, backToMainResults, getNavigationParent]
   );
 
   useEffect(() => {

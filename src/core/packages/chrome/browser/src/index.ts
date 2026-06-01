@@ -74,9 +74,11 @@ export type {
 
 export type { GlobalSearchConfig } from './chrome_next/global_search';
 
+export type { NavigationParentContext } from './project_navigation_utils';
 export {
   flattenNav,
   findActiveNodes,
   stripQueryParams,
+  getNavigationParentForUrl,
   getNavigationParentTitleForUrl,
 } from './project_navigation_utils';

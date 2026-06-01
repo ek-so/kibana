@@ -68,9 +68,11 @@ export type {
   GlobalSearchConfig,
 } from './src';
 
+export type { NavigationParentContext } from './src/project_navigation_utils';
 export {
   flattenNav,
   findActiveNodes,
   stripQueryParams,
+  getNavigationParentForUrl,
   getNavigationParentTitleForUrl,
 } from './src/project_navigation_utils';
