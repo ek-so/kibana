@@ -117,9 +117,6 @@ export const findActiveNodes = (
   return activeNodes;
 };
 
-const isVisibleNavigationNode = (node: ChromeProjectNavigationNode): boolean =>
-  Boolean(node.title) && node.breadcrumbStatus !== 'hidden' && node.renderAs !== 'home';
-
 const parseUrlForNavigation = (
   url: string
 ): {
@@ -144,8 +141,13 @@ const parseUrlForNavigation = (
 };
 
 /**
- * Returns the title of the parent navigation item for a given URL, based on the
+ * Returns a higher-level parent navigation title for a given URL, based on the
  * current solution's project navigation tree.
+ *
+ * For shallow paths (e.g. Machine Learning → Anomaly Detection), returns the
+ * immediate parent. For deeper paths (e.g. Stack Management → Cluster performance
+ * → Stack Monitoring), skips the intermediate section and returns the panel-level
+ * ancestor (Stack Management).
  */
 export const getNavigationParentTitleForUrl = ({
   url,
@@ -165,11 +167,14 @@ export const getNavigationParentTitleForUrl = ({
   const flattened = flattenNav(navNodes);
   const activeNodes = findActiveNodes(serializedPath, flattened, location, prependBasePath);
   const activePath = activeNodes[0] ?? [];
-  const visiblePath = activePath.filter(isVisibleNavigationNode);
+  const pathWithTitle = activePath.filter((node) => Boolean(node.title));
 
-  if (visiblePath.length < 2) {
+  if (pathWithTitle.length < 2) {
     return undefined;
   }
 
-  return visiblePath[visiblePath.length - 2].title;
+  const parentIndex =
+    pathWithTitle.length >= 3 ? pathWithTitle.length - 3 : pathWithTitle.length - 2;
+
+  return pathWithTitle[parentIndex].title;
 };

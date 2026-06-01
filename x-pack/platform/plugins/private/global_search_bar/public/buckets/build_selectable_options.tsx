@@ -8,6 +8,7 @@
 import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
 import React from 'react';
 import {
+  GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   type GlobalSearchBucket,
   type GlobalSearchBucketId,
@@ -19,6 +20,9 @@ import { RECENT_ITEMS_MAIN_LIMIT } from '../recent/recent_store';
 import { RecentBucketBackButton, RecentBucketMoreButton } from './recent_bucket_header_actions';
 
 export type GlobalSearchResultsView = 'main' | 'recent';
+
+/** Maximum navigate items shown in the main search popover. */
+export const NAVIGATE_ITEMS_MAIN_LIMIT = 5;
 
 export interface BucketDisplayConfig {
   id: GlobalSearchBucketId;
@@ -89,8 +93,11 @@ export const buildSelectableOptionsFromBuckets = ({
     }
 
     const isRecentBucket = bucket.id === GLOBAL_SEARCH_BUCKET_RECENT;
+    const isNavigateBucket = bucket.id === GLOBAL_SEARCH_BUCKET_NAVIGATE;
     const visibleItems = isRecentBucket
       ? bucket.items.slice(0, RECENT_ITEMS_MAIN_LIMIT)
+      : isNavigateBucket
+      ? bucket.items.slice(0, NAVIGATE_ITEMS_MAIN_LIMIT)
       : bucket.items;
     const hasMoreRecentItems =
       isRecentBucket && bucket.items.length > RECENT_ITEMS_MAIN_LIMIT && onShowAllRecent;

@@ -74,6 +74,44 @@ describe('getNavigationParentTitleForUrl', () => {
     ).toBe('Machine Learning');
   });
 
+  it('returns the panel-level parent for deeply nested stack management items', () => {
+    const stackManagementTree: NavigationTreeDefinitionUI = {
+      id: 'es',
+      footer: [
+        {
+          id: 'stack_management',
+          title: 'Stack Management',
+          breadcrumbStatus: 'hidden',
+          renderAs: 'panelOpener',
+          children: [
+            {
+              id: 'stack_management_home',
+              title: '',
+              children: [],
+            },
+            {
+              title: 'Cluster performance',
+              children: [
+                {
+                  id: 'monitoring',
+                  title: 'Stack Monitoring',
+                  deepLink: getDeepLink('monitoring', '/foo/app/monitoring'),
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(
+      getNavigationParentTitleForUrl({
+        url: '/foo/app/monitoring',
+        navigationTree: stackManagementTree,
+      })
+    ).toBe('Stack Management');
+  });
+
   it('returns undefined when the URL does not match the navigation tree', () => {
     expect(
       getNavigationParentTitleForUrl({

@@ -5,7 +5,10 @@
  * 2.0.
  */
 
-import { GLOBAL_SEARCH_BUCKET_RECENT } from '@kbn/global-search-plugin/public';
+import {
+  GLOBAL_SEARCH_BUCKET_NAVIGATE,
+  GLOBAL_SEARCH_BUCKET_RECENT,
+} from '@kbn/global-search-plugin/public';
 import type { GlobalSearchResult } from '@kbn/global-search-plugin/public';
 import { buildSelectableOptionsFromBuckets } from './build_selectable_options';
 
@@ -58,6 +61,28 @@ describe('buildSelectableOptionsFromBuckets', () => {
     expect(recentGroupLabel?.append).toBeTruthy();
     expect(getSelectableLabels(options)).toEqual(['recent-0', 'recent-1', 'recent-2']);
     expect(recentGroupLabel?.className).toContain('globalSearchBucketHeader--withMore');
+  });
+
+  it('limits navigate items to five in the main view', () => {
+    const navigateItems = Array.from({ length: 8 }, (_, index) => createResult(`nav-${index}`));
+
+    const options = buildSelectableOptionsFromBuckets({
+      buckets: [{ id: GLOBAL_SEARCH_BUCKET_NAVIGATE, items: navigateItems }],
+      bucketTitles,
+      suggestions: [],
+      searchTagIds: [],
+    });
+
+    expect(getSelectableLabels(options)).toEqual([
+      'nav-0',
+      'nav-1',
+      'nav-2',
+      'nav-3',
+      'nav-4',
+    ]);
+    expect(
+      options.find((option) => option.isGroupLabel && option.label === 'Navigate')?.append
+    ).toBeUndefined();
   });
 
   it('shows all recent items in the recent view with a back action', () => {
