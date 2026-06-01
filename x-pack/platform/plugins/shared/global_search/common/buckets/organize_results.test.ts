@@ -60,21 +60,25 @@ describe('organizeGlobalSearchResults', () => {
     expect(buckets[1].items.map((i) => i.title)).toEqual(['Dashboards']);
   });
 
-  it('puts non-application hits in results when searching', () => {
+  it('shows only results when searching, including applications', () => {
     const buckets = organizeGlobalSearchResults({
       results: [
         createResult({ id: 'discover', type: 'application', title: 'Discover', score: 90 }),
         createResult({ id: 'dash-1', type: 'dashboard', title: 'My dashboard', score: 80 }),
       ],
-      recent: [],
+      recent: [
+        createResult({
+          id: 'recent',
+          type: 'application',
+          title: 'Recent app',
+          url: '/app/recent',
+        }),
+      ],
       term: 'dash',
     });
 
-    expect(buckets.map((b) => b.id)).toEqual([
-      GLOBAL_SEARCH_BUCKET_NAVIGATE,
-      GLOBAL_SEARCH_BUCKET_RESULTS,
-    ]);
-    expect(buckets[1].items[0].title).toBe('My dashboard');
+    expect(buckets.map((b) => b.id)).toEqual([GLOBAL_SEARCH_BUCKET_RESULTS]);
+    expect(buckets[0].items.map((i) => i.title)).toEqual(['Discover', 'My dashboard']);
   });
 
   it('sorts navigate alphabetically when the term is empty', () => {

@@ -341,7 +341,7 @@ describe('useSearchState', () => {
     expect(labelsAfterLateEmit).toEqual(['Map', 'Visualize']);
   });
 
-  it('shows all recent pages while searching, even when the term does not match their title', async () => {
+  it('hides recent and navigate buckets while searching', async () => {
     mockGetRecentPages.mockReturnValue([
       createResult({ id: 'visited-dashboard', type: 'dashboard', title: 'Sales Overview' }),
     ]);
@@ -349,6 +349,10 @@ describe('useSearchState', () => {
     const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
 
     globalSearch.find.mockReturnValueOnce(of(createBatch('Discover')));
+
+    globalSearch.find.mockReturnValueOnce(
+      of(createBatch({ id: 'discover-match', type: 'application', title: 'Discover' }))
+    );
 
     const { result } = renderHook(() =>
       useSearchState({
@@ -360,6 +364,8 @@ describe('useSearchState', () => {
 
     await triggerInitialLoadAndRunDebounce(result);
 
+    expect(getSelectableLabels(result.current.options)).toContain('Sales Overview');
+
     act(() => {
       result.current.setSearchValue('discover');
     });
@@ -369,8 +375,19 @@ describe('useSearchState', () => {
     });
 
     const labels = getSelectableLabels(result.current.options);
-    expect(labels).toContain('Sales Overview');
-    expect(labels).toContain('Discover');
+    expect(labels).toEqual(['Discover']);
+    expect(
+      result.current.options.some(
+        (option: { isGroupLabel?: boolean; label?: string }) =>
+          option.isGroupLabel && option.label === 'Recent'
+      )
+    ).toBe(false);
+    expect(
+      result.current.options.some(
+        (option: { isGroupLabel?: boolean; label?: string }) =>
+          option.isGroupLabel && option.label === 'Navigate'
+      )
+    ).toBe(false);
   });
 
   it('records a visited page when a search result is selected', async () => {
