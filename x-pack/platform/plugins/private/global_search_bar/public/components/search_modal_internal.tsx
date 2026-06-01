@@ -7,7 +7,6 @@
 
 import {
   EuiHorizontalRule,
-  EuiIcon,
   EuiModalBody,
   EuiModalFooter,
   EuiModalHeader,
@@ -17,7 +16,7 @@ import {
   useEuiTheme,
 } from '@elastic/eui';
 import { css } from '@emotion/react';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { i18nStrings } from '../strings';
 import { SearchFooter } from './search_footer';
 import { SearchPlaceholder } from './search_placeholder';
@@ -70,19 +69,6 @@ export const SearchModalInternal = ({
     };
   }, [triggerInitialLoad, reportEvent]);
 
-  const formattedOptions = useMemo(
-    () =>
-      options.map((option) => ({
-        ...option,
-        prepend: option.icon ? (
-          <EuiIcon color="subdued" size="l" {...option.icon} />
-        ) : (
-          option.prepend
-        ),
-      })),
-    [options]
-  );
-
   const headerStyles = css`
     ${mediumAndUpBreakpoint} {
       padding-block: ${euiTheme.size.base};
@@ -112,7 +98,7 @@ export const SearchModalInternal = ({
       isPreFiltered
       onChange={onChange}
       onActiveOptionChange={onActiveOptionChange}
-      options={formattedOptions}
+      options={options}
       singleSelection="always"
       renderOption={(option) => euiSelectableTemplateSitewideRenderOptions(option, searchValue)}
       listProps={{

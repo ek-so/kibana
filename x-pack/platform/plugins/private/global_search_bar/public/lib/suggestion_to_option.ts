@@ -7,6 +7,7 @@
 
 import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
 import type { SearchSuggestion } from '../suggestions';
+import { createGlobalSearchResultPrepend } from './global_search_result_prepend_icon';
 
 export const suggestionToOption = (
   suggestion: SearchSuggestion
@@ -16,7 +17,7 @@ export const suggestionToOption = (
     key,
     label,
     type: '__suggestion__',
-    icon: { type: icon },
+    prepend: createGlobalSearchResultPrepend(icon),
     suggestion: suggestedSearch,
     meta: [{ text: description }],
     'data-test-subj': `nav-search-option`,

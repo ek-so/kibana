@@ -5,9 +5,16 @@
  * 2.0.
  */
 
+import React from 'react';
+import { render } from '@testing-library/react';
 import type { GlobalSearchResult } from '@kbn/global-search-plugin/common/types';
 import type { Tag } from '@kbn/saved-objects-tagging-oss-plugin/common';
 import { resultToOption } from './result_to_option';
+
+const getPrependIconType = (prepend: React.ReactNode): string | undefined => {
+  const { container } = render(React.createElement(React.Fragment, null, prepend));
+  return container.querySelector('[data-euiicon-type]')?.getAttribute('data-euiicon-type') ?? undefined;
+};
 
 const createSearchResult = (parts: Partial<GlobalSearchResult> = {}): GlobalSearchResult => ({
   id: 'id',
@@ -23,73 +30,67 @@ const createSearchResult = (parts: Partial<GlobalSearchResult> = {}): GlobalSear
 describe('resultToOption', () => {
   it('converts the result to the expected format', () => {
     const input = createSearchResult({});
-    expect(resultToOption(input, [])).toEqual({
-      key: input.id,
-      label: input.title,
-      url: input.url,
-      type: input.type,
-      icon: { type: expect.any(String) },
-      'data-test-subj': expect.any(String),
-    });
+    const option = resultToOption(input, []);
+    expect(option).toEqual(
+      expect.objectContaining({
+        key: input.id,
+        label: input.title,
+        url: input.url,
+        type: input.type,
+        'data-test-subj': expect.any(String),
+      })
+    );
+    expect(option.prepend).toBeDefined();
+    expect(getPrependIconType(option.prepend)).toBeDefined();
   });
 
   it('uses icon for `application` type', () => {
     const input = createSearchResult({ type: 'application', icon: 'app-icon' });
-    expect(resultToOption(input, [])).toEqual(
-      expect.objectContaining({
-        icon: { type: 'app-icon' },
-      })
-    );
+    const option = resultToOption(input, []);
+
+    expect(getPrependIconType(option.prepend)).toBe('app-icon');
   });
 
   it('uses icon for `integration` type', () => {
     const input = createSearchResult({ type: 'integration', icon: 'integ-icon' });
-    expect(resultToOption(input, [])).toEqual(
-      expect.objectContaining({
-        icon: { type: 'integ-icon' },
-      })
-    );
+    const option = resultToOption(input, []);
+
+    expect(getPrependIconType(option.prepend)).toBe('integ-icon');
   });
 
   it('uses icon for `index` type', () => {
     const input = createSearchResult({ type: 'index', icon: 'index-icon' });
-    expect(resultToOption(input, [])).toEqual(
-      expect.objectContaining({
-        icon: { type: 'index-icon' },
-      })
-    );
+    const option = resultToOption(input, []);
+
+    expect(getPrependIconType(option.prepend)).toBe('index-icon');
   });
 
   it('uses icon for `connector` type', () => {
     const input = createSearchResult({ type: 'connector', icon: 'connector-icon' });
-    expect(resultToOption(input, [])).toEqual(
-      expect.objectContaining({
-        icon: { type: 'connector-icon' },
-      })
-    );
+    const option = resultToOption(input, []);
+
+    expect(getPrependIconType(option.prepend)).toBe('connector-icon');
   });
 
   it('uses a grid icon for items not in the navigation menu', () => {
     const input = createSearchResult({ type: 'dashboard', icon: 'dash-icon' });
     const option = resultToOption(input, [], undefined, () => ({ matchedInNavigation: false }));
 
-    expect(option.icon).toEqual({ type: 'grid' });
+    expect(getPrependIconType(option.prepend)).toBe('grid');
   });
 
   it('keeps the integration icon when not in the navigation menu', () => {
     const input = createSearchResult({ type: 'integration', icon: 'integ-icon' });
     const option = resultToOption(input, [], undefined, () => ({ matchedInNavigation: false }));
 
-    expect(option.icon).toEqual({ type: 'integ-icon' });
+    expect(getPrependIconType(option.prepend)).toBe('integ-icon');
   });
 
   it('uses the provider icon for applications not in the menu when navigation is unavailable', () => {
     const input = createSearchResult({ type: 'application', icon: 'logoKibana' });
-    expect(resultToOption(input, [])).toEqual(
-      expect.objectContaining({
-        icon: { type: 'logoKibana' },
-      })
-    );
+    const option = resultToOption(input, []);
+
+    expect(getPrependIconType(option.prepend)).toBe('logoKibana');
   });
 
   it("doesn't crash on unknown tag", () => {
@@ -161,7 +162,7 @@ describe('resultToOption', () => {
       matchedInNavigation: true,
     }));
 
-    expect(option.icon).toEqual({ type: 'gear' });
+    expect(getPrependIconType(option.prepend)).toBe('gear');
   });
 
   it('uses the active nav item icon for top-level items', () => {
@@ -175,7 +176,7 @@ describe('resultToOption', () => {
       matchedInNavigation: true,
     }));
 
-    expect(option.icon).toEqual({ type: 'productDiscover' });
+    expect(getPrependIconType(option.prepend)).toBe('productDiscover');
   });
 
   it('falls back to the result icon when the navigation parent has no icon', () => {
@@ -189,6 +190,13 @@ describe('resultToOption', () => {
       matchedInNavigation: true,
     }));
 
-    expect(option.icon).toEqual({ type: 'machineLearningApp' });
+    expect(getPrependIconType(option.prepend)).toBe('machineLearningApp');
+  });
+
+  it('does not set prepend when the resolved icon is empty', () => {
+    const input = createSearchResult({ type: 'unknown-type', icon: undefined });
+    const option = resultToOption(input, []);
+
+    expect(option.prepend).toBeUndefined();
   });
 });
