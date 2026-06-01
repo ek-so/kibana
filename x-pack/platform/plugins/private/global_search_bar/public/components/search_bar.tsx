@@ -19,7 +19,7 @@ import {
   useEuiTheme,
 } from '@elastic/eui';
 import { css } from '@emotion/react';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import useEvent from 'react-use/lib/useEvent';
 import useObservable from 'react-use/lib/useObservable';
 import { isMac } from '@kbn/shared-ux-utility';
@@ -29,6 +29,7 @@ import { EmptyMessage } from './empty_message';
 import { SearchPlaceholder } from './search_placeholder';
 import { CharLimitExceededMessage } from './char_limit_exceeded_message';
 import { SearchFooter } from './search_footer';
+import { getGlobalSearchSelectableListHeight } from '../lib/get_global_search_list_height';
 import { globalSearchSelectableListStyles } from '../lib/global_search_list_styles';
 import { useSearchState } from '../hooks/use_search_state';
 import { blurEvent } from '.';
@@ -43,7 +44,8 @@ export const SearchBar = ({
   getNavigation$,
   prependBasePath,
 }: SearchBarProps) => {
-  const { euiTheme } = useEuiTheme();
+  const euiThemeContext = useEuiTheme();
+  const { euiTheme } = euiThemeContext;
   const chromeStyle = useObservable(chromeStyle$);
 
   // These hooks are used when on chromeStyle set to 'project'
@@ -90,6 +92,8 @@ export const SearchBar = ({
       width: mathWithUnits(euiTheme.size.xxl, (x) => x * 15),
     },
   });
+
+  const listHeight = useMemo(() => getGlobalSearchSelectableListHeight(options), [options]);
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -162,6 +166,7 @@ export const SearchBar = ({
 
   return (
     <EuiSelectableTemplateSitewide
+      {...(listHeight !== undefined ? { height: listHeight } : {})}
       isLoading={isLoading}
       isPreFiltered
       onChange={onChange}
@@ -175,11 +180,7 @@ export const SearchBar = ({
       listProps={{
         ...selectableListProps,
         className: 'eui-yScroll',
-        css: css`
-          max-block-size: 75vh;
-
-          ${globalSearchSelectableListStyles({ euiTheme })}
-        `,
+        css: globalSearchSelectableListStyles(euiThemeContext),
       }}
       searchProps={{
         autoFocus: chromeStyle === 'project',

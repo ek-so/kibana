@@ -18,6 +18,9 @@ export const SEARCH_MODAL_WIDTH_PX = 800;
 /** Row height for virtualized global search lists (EuiSelectableTemplateSitewide default). */
 export const GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX = 40;
 
+/** Max height of the results list in the search popover. */
+export const GLOBAL_SEARCH_POPOVER_LIST_MAX_HEIGHT_PX = 500;
+
 export const SEARCH_MODAL_ROW_HEIGHT_PX = GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX;
 
 export interface ProjectNavigationState {
