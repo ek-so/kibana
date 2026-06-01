@@ -84,11 +84,7 @@ describe('getAppResults', () => {
 
     const results = getAppResults('App 1', apps);
 
-    expect(results.map(({ title }) => title)).toEqual([
-      'App 1',
-      'App 1 / Sub1',
-      'App 1 / Sub2 / Sub2Sub1',
-    ]);
+    expect(results.map(({ title }) => title)).toEqual(['App 1', 'Sub1', 'Sub2Sub1']);
   });
 
   it('deep links "category" and "icon" should take precedence over the same app properties', () => {
@@ -130,12 +126,12 @@ describe('getAppResults', () => {
     expect(observabilityLink).toMatchObject({
       icon: 'logoKibana',
       meta: { categoryId: 'kibana', categoryLabel: 'Analytics' },
-      title: 'App 1 / Sub Observability',
+      title: 'Sub Observability',
     });
     expect(securityLink).toMatchObject({
       icon: 'logoSecurity',
       meta: { categoryId: 'securitySolution', categoryLabel: 'Security' },
-      title: 'App 1 / Sub Security',
+      title: 'Sub Security',
     });
   });
 
@@ -206,7 +202,7 @@ describe('getAppResults', () => {
     ];
 
     const results = getAppResults('TwoOne', apps);
-    expect(results.map(({ title }) => title)).toEqual(['App 1 / Sub2 / Sub2Sub1']);
+    expect(results.map(({ title }) => title)).toEqual(['Sub2Sub1']);
   });
 });
 
@@ -393,7 +389,7 @@ describe('appToResult', () => {
       keywords: [],
     };
 
-    expect(appToResult(appLink, 42).title).toEqual('App 1 / Sub1');
+    expect(appToResult(appLink, 42).title).toEqual('Sub1');
   });
 
   it('does not include the app name in sub links for Stack Management', () => {

@@ -103,8 +103,7 @@ export const appToResult = (appLink: AppLink, score: number): GlobalSearchProvid
 
   return {
     id: appLink.id,
-    // Concatenate title using slashes
-    title: titleParts.join(' / '),
+    title: titleParts[titleParts.length - 1] ?? appLink.app.title,
     type: 'application',
     icon: appLink.euiIconType ?? appLink.app.euiIconType,
     url: appLink.path,
