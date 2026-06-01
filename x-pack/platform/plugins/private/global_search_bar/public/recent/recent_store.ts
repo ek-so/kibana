@@ -11,6 +11,9 @@ import type { RecentPageRecord } from './types';
 const STORAGE_KEY_PREFIX = 'kibana.globalSearch.recent.v1';
 const MAX_RECENT_ITEMS = 10;
 
+/** Maximum recent pages shown in the main search popover before "More". */
+export const RECENT_ITEMS_MAIN_LIMIT = 3;
+
 export const getActiveSpaceId = (): string => {
   if (typeof window === 'undefined') {
     return 'default';

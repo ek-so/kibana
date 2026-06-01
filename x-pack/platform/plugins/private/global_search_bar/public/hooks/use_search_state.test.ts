@@ -48,6 +48,7 @@ const mockGetRecentPages = jest.fn(() => []);
 const mockRecordRecentPage = jest.fn();
 
 jest.mock('../recent/recent_store', () => ({
+  ...jest.requireActual('../recent/recent_store'),
   getRecentPages: () => mockGetRecentPages(),
   filterRecentPagesForTerm: jest.fn((recent: unknown[]) => recent),
   recordRecentPage: (...args: unknown[]) => mockRecordRecentPage(...args),
@@ -162,6 +163,38 @@ describe('useSearchState', () => {
       result.current.options.some(
         (option: { isGroupLabel?: boolean; label?: string }) =>
           option.isGroupLabel && option.label === 'Recent'
+      )
+    ).toBe(true);
+  });
+
+  it('limits recent pages to three items in the main search view', async () => {
+    mockGetRecentPages.mockReturnValue(
+      Array.from({ length: 7 }, (_, index) =>
+        createResult({ id: `recent-${index}`, type: 'application', title: `Recent ${index}` })
+      )
+    );
+
+    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+
+    const { result } = renderHook(() =>
+      useSearchState({
+        globalSearch,
+        navigateToUrl,
+        reportEvent,
+      })
+    );
+
+    act(() => {
+      result.current.triggerInitialLoad();
+    });
+
+    const recentLabels = getSelectableLabels(result.current.options);
+    expect(recentLabels).toHaveLength(3);
+    expect(recentLabels).toEqual(['recent-0', 'recent-1', 'recent-2']);
+    expect(
+      result.current.options.some(
+        (option: { isGroupLabel?: boolean; append?: unknown }) =>
+          option.isGroupLabel && option.append
       )
     ).toBe(true);
   });

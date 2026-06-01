@@ -29,6 +29,7 @@ import { getSuggestions } from '../suggestions';
 import type { SearchProps } from '../components/types';
 import { parseSearchParams } from '../search_syntax';
 import { buildSelectableOptionsFromBuckets } from '../buckets/build_selectable_options';
+import type { GlobalSearchResultsView } from '../buckets/build_selectable_options';
 import {
   filterRecentPagesForTerm,
   getRecentPages,
@@ -100,10 +101,25 @@ export const useSearchState = ({
   const [searchableTypes, setSearchableTypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [searchCharLimitExceeded, setSearchCharLimitExceeded] = useState(false);
+  const [resultsView, setResultsView] = useState<GlobalSearchResultsView>('main');
+
+  const showAllRecent = useCallback(() => {
+    setResultsView('recent');
+  }, []);
+
+  const backToMainResults = useCallback(() => {
+    setResultsView('main');
+  }, []);
 
   const searchSubscription = useRef<Subscription | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const latestResultsRef = useRef<GlobalSearchResult[]>([]);
+  const lastUpdateParamsRef = useRef<{
+    results: GlobalSearchResult[];
+    suggestions: SearchSuggestion[];
+    searchTagIds: string[];
+    term: string;
+  } | null>(null);
 
   const setSearchRef = useCallback((ref: HTMLInputElement | null) => {
     searchRef.current = ref;
@@ -150,6 +166,7 @@ export const useSearchState = ({
       searchTagIds: string[] = [],
       term = ''
     ) => {
+      lastUpdateParamsRef.current = { results, suggestions, searchTagIds, term };
       const recent = filterRecentPagesForTerm(getRecentPages(), term);
       const buckets = organizeGlobalSearchResults({ results, recent, term });
 
@@ -160,13 +177,26 @@ export const useSearchState = ({
           suggestions,
           searchTagIds,
           getTagList: taggingApi?.ui.getTagList,
+          view: resultsView,
+          onShowAllRecent: showAllRecent,
+          onBackToMain: backToMainResults,
         })
       );
     },
-    [taggingApi]
+    [taggingApi, resultsView, showAllRecent, backToMainResults]
   );
 
+  useEffect(() => {
+    const params = lastUpdateParamsRef.current;
+    if (!params || !initialLoad) {
+      return;
+    }
+
+    updateOptions(params.results, params.suggestions, params.searchTagIds, params.term);
+  }, [resultsView, updateOptions, initialLoad]);
+
   const triggerInitialLoad = useCallback(() => {
+    setResultsView('main');
     setInitialLoad(true);
     setLoadGeneration((generation) => generation + 1);
     // Show Recent immediately; do not wait for the debounced find() round-trip.
@@ -358,6 +388,7 @@ export const useSearchState = ({
       }
 
       onResultSelectRef.current?.();
+      setResultsView('main');
     },
     [reportEvent, navigateToUrl, searchValue]
   );
