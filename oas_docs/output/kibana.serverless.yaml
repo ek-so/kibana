@@ -3129,6 +3129,14 @@ paths:
                           nullable: true
                         description: Payload of the attachment. Required unless `origin` is provided (content is resolved once at send time).
                         type: object
+                      description:
+                        description: Human-readable label for the attachment.
+                        maxLength: 1024
+                        type: string
+                      group_id:
+                        description: Stable identifier for the logical group this attachment belongs to. Attachments sharing the same group_id were submitted together as a single logical entity.
+                        maxLength: 256
+                        type: string
                       hidden:
                         description: When true, the attachment will not be displayed in the UI.
                         type: boolean
@@ -3512,6 +3520,14 @@ paths:
                           nullable: true
                         description: Payload of the attachment. Required unless `origin` is provided (content is resolved once at send time).
                         type: object
+                      description:
+                        description: Human-readable label for the attachment.
+                        maxLength: 1024
+                        type: string
+                      group_id:
+                        description: Stable identifier for the logical group this attachment belongs to. Attachments sharing the same group_id were submitted together as a single logical entity.
+                        maxLength: 256
+                        type: string
                       hidden:
                         description: When true, the attachment will not be displayed in the UI.
                         type: boolean
@@ -17606,72 +17622,12 @@ paths:
       x-metaTags:
         - content: Kibana, Elastic Cloud Serverless
           name: product_name
-  /api/endpoint/action/running_procs:
+  /api/endpoint/action/run_script:
     post:
       description: |-
         **Spaces method and path for this operation:**
 
-        <div><span class="operation-verb post">post</span>&nbsp;<span class="operation-path">/s/{space_id}/api/endpoint/action/running_procs</span></div>
-
-        Refer to [Spaces](https://www.elastic.co/docs/deploy-manage/manage-spaces) for more information.
-
-        Get a list of all processes running on an endpoint.
-      operationId: EndpointGetProcessesAction
-      requestBody:
-        content:
-          application/json:
-            examples:
-              singleEndpoint:
-                summary: Get running processes on a single endpoint
-                value:
-                  endpoint_ids:
-                    - ed518850-681a-4d60-bb98-e22640cae2a8
-            schema:
-              $ref: '#/components/schemas/Security_Endpoint_Management_API_GetProcessesRouteRequestBody'
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              examples:
-                RunningProcsSuccess:
-                  summary: Running processes action successfully created
-                  value:
-                    data:
-                      agents:
-                        - ed518850-681a-4d60-bb98-e22640cae2a8
-                      agentState:
-                        ed518850-681a-4d60-bb98-e22640cae2a8:
-                          isCompleted: false
-                          wasSuccessful: false
-                      agentType: endpoint
-                      command: running-processes
-                      createdBy: elastic
-                      hosts:
-                        ed518850-681a-4d60-bb98-e22640cae2a8:
-                          name: gke-node-1235412
-                      id: 233db9ea-6733-4849-9226-5a7039c7161d
-                      isCompleted: false
-                      isExpired: false
-                      outputs: {}
-                      startedAt: '2022-07-29T19:08:49.126Z'
-                      status: pending
-                      wasSuccessful: false
-              schema:
-                $ref: '#/components/schemas/Security_Endpoint_Management_API_ResponseActionCreateSuccessResponse'
-          description: Indicates a successful call.
-      summary: Get running processes
-      tags:
-        - Security Endpoint Management API
-      x-metaTags:
-        - content: Kibana, Elastic Cloud Serverless
-          name: product_name
-  /api/endpoint/action/runscript:
-    post:
-      description: |-
-        **Spaces method and path for this operation:**
-
-        <div><span class="operation-verb post">post</span>&nbsp;<span class="operation-path">/s/{space_id}/api/endpoint/action/runscript</span></div>
+        <div><span class="operation-verb post">post</span>&nbsp;<span class="operation-path">/s/{space_id}/api/endpoint/action/run_script</span></div>
 
         Refer to [Spaces](https://www.elastic.co/docs/deploy-manage/manage-spaces) for more information.
 
@@ -17748,6 +17704,66 @@ paths:
                 $ref: '#/components/schemas/Security_Endpoint_Management_API_ResponseActionCreateSuccessResponse'
           description: Indicates a successful call.
       summary: Run a script
+      tags:
+        - Security Endpoint Management API
+      x-metaTags:
+        - content: Kibana, Elastic Cloud Serverless
+          name: product_name
+  /api/endpoint/action/running_procs:
+    post:
+      description: |-
+        **Spaces method and path for this operation:**
+
+        <div><span class="operation-verb post">post</span>&nbsp;<span class="operation-path">/s/{space_id}/api/endpoint/action/running_procs</span></div>
+
+        Refer to [Spaces](https://www.elastic.co/docs/deploy-manage/manage-spaces) for more information.
+
+        Get a list of all processes running on an endpoint.
+      operationId: EndpointGetProcessesAction
+      requestBody:
+        content:
+          application/json:
+            examples:
+              singleEndpoint:
+                summary: Get running processes on a single endpoint
+                value:
+                  endpoint_ids:
+                    - ed518850-681a-4d60-bb98-e22640cae2a8
+            schema:
+              $ref: '#/components/schemas/Security_Endpoint_Management_API_GetProcessesRouteRequestBody'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                RunningProcsSuccess:
+                  summary: Running processes action successfully created
+                  value:
+                    data:
+                      agents:
+                        - ed518850-681a-4d60-bb98-e22640cae2a8
+                      agentState:
+                        ed518850-681a-4d60-bb98-e22640cae2a8:
+                          isCompleted: false
+                          wasSuccessful: false
+                      agentType: endpoint
+                      command: running-processes
+                      createdBy: elastic
+                      hosts:
+                        ed518850-681a-4d60-bb98-e22640cae2a8:
+                          name: gke-node-1235412
+                      id: 233db9ea-6733-4849-9226-5a7039c7161d
+                      isCompleted: false
+                      isExpired: false
+                      outputs: {}
+                      startedAt: '2022-07-29T19:08:49.126Z'
+                      status: pending
+                      wasSuccessful: false
+              schema:
+                $ref: '#/components/schemas/Security_Endpoint_Management_API_ResponseActionCreateSuccessResponse'
+          description: Indicates a successful call.
+      summary: Get running processes
       tags:
         - Security Endpoint Management API
       x-metaTags:
@@ -26296,7 +26312,7 @@ paths:
                         nullable: true
                         type: string
                       condition:
-                        description: '**Experimental.** Agent condition expression to evaluate whether to apply this integration to its inputs.'
+                        description: Agent condition expression to evaluate whether to apply this integration to its inputs.
                         type: string
                       created_at:
                         type: string
@@ -26351,7 +26367,7 @@ paths:
                                 compiled_input:
                                   nullable: true
                                 condition:
-                                  description: '**Experimental.** Agent condition expression to evaluate whether to apply this input.'
+                                  description: Agent condition expression to evaluate whether to apply this input.
                                   type: string
                                 config:
                                   additionalProperties:
@@ -26390,7 +26406,7 @@ paths:
                                       compiled_stream:
                                         nullable: true
                                       condition:
-                                        description: '**Experimental.** Agent condition expression to evaluate whether to apply this stream.'
+                                        description: Agent condition expression to evaluate whether to apply this stream.
                                         type: string
                                       config:
                                         additionalProperties:
@@ -26510,7 +26526,7 @@ paths:
                               type: object
                               properties:
                                 condition:
-                                  description: '**Experimental.** Agent condition expression to evaluate whether to apply this input.'
+                                  description: Agent condition expression to evaluate whether to apply this input.
                                   type: string
                                 deprecated:
                                   $ref: '#/components/schemas/Kibana_HTTP_APIs_deprecation_info'
@@ -26523,7 +26539,7 @@ paths:
                                     type: object
                                     properties:
                                       condition:
-                                        description: '**Experimental.** Agent condition expression to evaluate whether to apply this stream.'
+                                        description: Agent condition expression to evaluate whether to apply this stream.
                                         type: string
                                       deprecated:
                                         $ref: '#/components/schemas/Kibana_HTTP_APIs_deprecation_info'
@@ -27243,6 +27259,9 @@ paths:
                             type: string
                           maxItems: 10000
                           type: array
+                        pipeline_config:
+                          maxLength: 10000
+                          type: string
                         policy_id:
                           type: string
                         policy_revision:
@@ -27904,6 +27923,9 @@ paths:
                           type: string
                         maxItems: 10000
                         type: array
+                      pipeline_config:
+                        maxLength: 10000
+                        type: string
                       policy_id:
                         type: string
                       policy_revision:
@@ -28382,6 +28404,9 @@ paths:
                           type: string
                         maxItems: 10000
                         type: array
+                      pipeline_config:
+                        maxLength: 10000
+                        type: string
                       policy_id:
                         type: string
                       policy_revision:
@@ -31061,6 +31086,160 @@ paths:
       summary: Bulk upgrade agents
       tags:
         - Elastic Agent actions
+      x-metaTags:
+        - content: Kibana, Elastic Cloud Serverless
+          name: product_name
+  /api/fleet/agents/collector_groups:
+    get:
+      description: |-
+        **Spaces method and path for this operation:**
+
+        <div><span class="operation-verb get">get</span>&nbsp;<span class="operation-path">/s/{space_id}/api/fleet/agents/collector_groups</span></div>
+
+        Refer to [Spaces](https://www.elastic.co/docs/deploy-manage/manage-spaces) for more information.
+
+        Get OpAMP collectors grouped by elastic.collector.group with cursor-based pagination.<br/><br/>[Required authorization] Route required privileges: fleet-agents-read.
+      operationId: get-fleet-agents-collector-groups
+      parameters:
+        - description: Field to group collectors by
+          in: query
+          name: groupBy
+          required: false
+          schema:
+            default: collector.group
+            enum:
+              - collector.group
+              - config.name
+            type: string
+        - description: A KQL query string to filter collectors before grouping
+          in: query
+          name: kuery
+          required: false
+          schema:
+            maxLength: 4096
+            type: string
+        - description: Number of groups per page
+          in: query
+          name: perPage
+          required: false
+          schema:
+            default: 20
+            maximum: 1000
+            minimum: 1
+            type: number
+        - description: After key is used for cursor-based pagination, use it to get the next page of results
+          in: query
+          name: afterKey
+          required: false
+          schema:
+            maxLength: 2048
+            type: string
+        - description: When true, include inactive collectors in the results
+          in: query
+          name: showInactive
+          required: false
+          schema:
+            default: false
+            type: boolean
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                getCollectorGroupsExample:
+                  description: Collector groups
+                  value:
+                    afterKey: '{"collector.group":"database-servers"}'
+                    items:
+                      - docCount: 5
+                        group: web-servers
+                        groupDisplayName: web-servers
+                        isUngrouped: false
+                        signals:
+                          - logs
+                          - metrics
+                      - docCount: 3
+                        group: database-servers
+                        groupDisplayName: database-servers
+                        signals:
+                          - metrics
+                          - traces
+              schema:
+                additionalProperties: false
+                type: object
+                properties:
+                  afterKey:
+                    maxLength: 2048
+                    type: string
+                  items:
+                    items:
+                      additionalProperties: false
+                      type: object
+                      properties:
+                        docCount:
+                          description: Number of collectors in this group
+                          type: number
+                        group:
+                          description: Group key value
+                          maxLength: 1024
+                          type: string
+                        groupDisplayName:
+                          description: Human-readable display name for the group
+                          maxLength: 1024
+                          type: string
+                        isUngrouped:
+                          description: True when the collectors in this bucket have no value for the group-by field
+                          type: boolean
+                        signals:
+                          description: Signal types present in this group (for example, logs, metrics, traces)
+                          items:
+                            maxLength: 64
+                            type: string
+                          maxItems: 10
+                          type: array
+                      required:
+                        - group
+                        - groupDisplayName
+                        - docCount
+                        - signals
+                    maxItems: 1000
+                    type: array
+                required:
+                  - items
+          description: Successful response
+        '400':
+          content:
+            application/json:
+              examples:
+                genericErrorResponseExample:
+                  description: Example of a generic error response
+                  value:
+                    error: Bad Request
+                    message: An error message describing what went wrong
+                    statusCode: 400
+              schema:
+                additionalProperties: false
+                description: Generic Error
+                type: object
+                properties:
+                  attributes:
+                    nullable: true
+                  error:
+                    type: string
+                  errorType:
+                    type: string
+                  message:
+                    type: string
+                  statusCode:
+                    type: number
+                required:
+                  - message
+                  - attributes
+          description: Bad Request
+      summary: Get collector groups
+      tags:
+        - Elastic Agents
+      x-state: Experimental
       x-metaTags:
         - content: Kibana, Elastic Cloud Serverless
           name: product_name
@@ -37871,7 +38050,14 @@ paths:
                 properties:
                   items:
                     items:
-                      anyOf:
+                      discriminator:
+                        mapping:
+                          elasticsearch: '#/components/schemas/Kibana_HTTP_APIs_output_elasticsearch'
+                          kafka: '#/components/schemas/Kibana_HTTP_APIs_output_kafka'
+                          logstash: '#/components/schemas/Kibana_HTTP_APIs_output_logstash'
+                          remote_elasticsearch: '#/components/schemas/Kibana_HTTP_APIs_output_remote_elasticsearch'
+                        propertyName: type
+                      oneOf:
                         - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_elasticsearch'
                         - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_remote_elasticsearch'
                         - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_logstash'
@@ -37957,7 +38143,14 @@ paths:
                   name: My output
                   type: elasticsearch
             schema:
-              anyOf:
+              discriminator:
+                mapping:
+                  elasticsearch: '#/components/schemas/Kibana_HTTP_APIs_new_output_elasticsearch'
+                  kafka: '#/components/schemas/Kibana_HTTP_APIs_new_output_kafka'
+                  logstash: '#/components/schemas/Kibana_HTTP_APIs_new_output_logstash'
+                  remote_elasticsearch: '#/components/schemas/Kibana_HTTP_APIs_new_output_remote_elasticsearch'
+                propertyName: type
+              oneOf:
                 - $ref: '#/components/schemas/Kibana_HTTP_APIs_new_output_elasticsearch'
                 - $ref: '#/components/schemas/Kibana_HTTP_APIs_new_output_remote_elasticsearch'
                 - $ref: '#/components/schemas/Kibana_HTTP_APIs_new_output_logstash'
@@ -37983,7 +38176,14 @@ paths:
                 type: object
                 properties:
                   item:
-                    anyOf:
+                    discriminator:
+                      mapping:
+                        elasticsearch: '#/components/schemas/Kibana_HTTP_APIs_output_elasticsearch'
+                        kafka: '#/components/schemas/Kibana_HTTP_APIs_output_kafka'
+                        logstash: '#/components/schemas/Kibana_HTTP_APIs_output_logstash'
+                        remote_elasticsearch: '#/components/schemas/Kibana_HTTP_APIs_output_remote_elasticsearch'
+                      propertyName: type
+                    oneOf:
                       - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_elasticsearch'
                       - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_remote_elasticsearch'
                       - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_logstash'
@@ -38171,7 +38371,14 @@ paths:
                 type: object
                 properties:
                   item:
-                    anyOf:
+                    discriminator:
+                      mapping:
+                        elasticsearch: '#/components/schemas/Kibana_HTTP_APIs_output_elasticsearch'
+                        kafka: '#/components/schemas/Kibana_HTTP_APIs_output_kafka'
+                        logstash: '#/components/schemas/Kibana_HTTP_APIs_output_logstash'
+                        remote_elasticsearch: '#/components/schemas/Kibana_HTTP_APIs_output_remote_elasticsearch'
+                      propertyName: type
+                    oneOf:
                       - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_elasticsearch'
                       - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_remote_elasticsearch'
                       - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_logstash'
@@ -38286,7 +38493,14 @@ paths:
                 type: object
                 properties:
                   item:
-                    anyOf:
+                    discriminator:
+                      mapping:
+                        elasticsearch: '#/components/schemas/Kibana_HTTP_APIs_output_elasticsearch'
+                        kafka: '#/components/schemas/Kibana_HTTP_APIs_output_kafka'
+                        logstash: '#/components/schemas/Kibana_HTTP_APIs_output_logstash'
+                        remote_elasticsearch: '#/components/schemas/Kibana_HTTP_APIs_output_remote_elasticsearch'
+                      propertyName: type
+                    oneOf:
                       - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_elasticsearch'
                       - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_remote_elasticsearch'
                       - $ref: '#/components/schemas/Kibana_HTTP_APIs_output_logstash'
@@ -62332,6 +62546,114 @@ paths:
       x-metaTags:
         - content: Kibana, Elastic Cloud Serverless
           name: product_name
+  /api/workflows/managed/workflow/{id}:
+    put:
+      description: |-
+        **Spaces method and path for this operation:**
+
+        <div><span class="operation-verb put">put</span>&nbsp;<span class="operation-path">/s/{space_id}/api/workflows/managed/workflow/{id}</span></div>
+
+        Refer to [Spaces](https://www.elastic.co/docs/deploy-manage/manage-spaces) for more information.
+
+        Partially update an existing managed workflow. This elevated route can update fields beyond the enabled state.<br/><br/>[Required authorization] Route required privileges: workflowsManagement:update AND workflowsManagement:managed:update.
+      operationId: put-workflows-managed-workflow-id
+      parameters:
+        - description: A required header to protect against CSRF attacks
+          in: header
+          name: kbn-xsrf
+          required: true
+          schema:
+            example: 'true'
+            type: string
+        - description: Workflow ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            examples:
+              updateManagedWorkflowExample:
+                description: Example request to update a managed workflow
+                value:
+                  description: Updated managed workflow description
+                  enabled: true
+                  name: Updated managed workflow
+                  tags:
+                    - managed
+                    - updated
+                  yaml: |
+                    name: Updated managed workflow
+                    enabled: true
+                    description: Updated managed workflow description
+                    triggers:
+                      - type: manual
+                    steps:
+                      - name: hello_world_step
+                        type: console
+                        with:
+                          message: "hello world"
+            schema:
+              additionalProperties: false
+              type: object
+              properties:
+                description:
+                  type: string
+                enabled:
+                  type: boolean
+                name:
+                  type: string
+                tags:
+                  items:
+                    type: string
+                  type: array
+                yaml:
+                  type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                updateManagedWorkflowResponseExample:
+                  description: Example response returning the updated managed workflow
+                  value:
+                    enabled: true
+                    id: workflow-a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                    lastUpdatedAt: '2026-03-23T13:38:59.568Z'
+                    lastUpdatedBy: elastic
+                    valid: true
+                    validationErrors: []
+          description: Indicates a successful response
+      summary: Update a managed workflow
+      tags:
+        - workflows
+      x-codeSamples:
+        - lang: curl
+          source: |
+            curl \
+              -X PUT "${KIBANA_URL}/api/workflows/managed/workflow/{id}" \
+              -H "Authorization: ApiKey ${API_KEY}" \
+              -H "kbn-xsrf: true" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "name": "Updated managed workflow",
+                "enabled": true,
+                "tags": ["managed", "updated"]
+              }'
+        - lang: Console
+          source: |
+            PUT kbn://api/workflows/managed/workflow/{id}
+            {
+              "name": "Updated managed workflow",
+              "enabled": true,
+              "tags": ["managed", "updated"]
+            }
+      x-state: Generally available
+      x-metaTags:
+        - content: Kibana, Elastic Cloud Serverless
+          name: product_name
   /api/workflows/mget:
     post:
       description: |-
@@ -68860,6 +69182,29 @@ components:
         - metric_field
       title: aiops_change_point_chart
       type: object
+    Kibana_HTTP_APIs_aiops_log_rate_analysis:
+      additionalProperties: false
+      description: Log rate analysis embeddable schema
+      properties:
+        data_view_id:
+          description: The data view ID used to run log rate analysis.
+          maxLength: 1000
+          minLength: 1
+          type: string
+        description:
+          type: string
+        hide_border:
+          type: boolean
+        hide_title:
+          type: boolean
+        time_range:
+          $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-es-query-server-timeRangeSchema'
+        title:
+          type: string
+      required:
+        - data_view_id
+      title: aiops_log_rate_analysis
+      type: object
     Kibana_HTTP_APIs_alerts_filter_query:
       additionalProperties: false
       properties:
@@ -70984,7 +71329,7 @@ components:
           nullable: true
           type: string
         condition:
-          description: '**Experimental.** Agent condition expression to evaluate whether to apply this integration to its inputs.'
+          description: Agent condition expression to evaluate whether to apply this integration to its inputs.
           type: string
         description:
           description: Package policy description
@@ -71022,7 +71367,7 @@ components:
             type: object
             properties:
               condition:
-                description: '**Experimental.** Agent condition expression to evaluate whether to apply this input.'
+                description: Agent condition expression to evaluate whether to apply this input.
                 type: string
               config:
                 additionalProperties:
@@ -71061,7 +71406,7 @@ components:
                     compiled_stream:
                       nullable: true
                     condition:
-                      description: '**Experimental.** Agent condition expression to evaluate whether to apply this stream.'
+                      description: Agent condition expression to evaluate whether to apply this stream.
                       type: string
                     config:
                       additionalProperties:
@@ -71630,6 +71975,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         rows:
           description: Array of operations to split the datatable rows by
@@ -72895,6 +73241,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         rows:
           description: Array of operations to split the datatable rows by
@@ -73570,7 +73917,7 @@ components:
           nullable: true
           type: string
         condition:
-          description: '**Experimental.** Agent condition expression to evaluate whether to apply this integration to its inputs.'
+          description: Agent condition expression to evaluate whether to apply this integration to its inputs.
           type: string
         created_at:
           type: string
@@ -73638,7 +73985,7 @@ components:
               compiled_input:
                 nullable: true
               condition:
-                description: '**Experimental.** Agent condition expression to evaluate whether to apply this input.'
+                description: Agent condition expression to evaluate whether to apply this input.
                 type: string
               config:
                 additionalProperties:
@@ -73677,7 +74024,7 @@ components:
                     compiled_stream:
                       nullable: true
                     condition:
-                      description: '**Experimental.** Agent condition expression to evaluate whether to apply this stream.'
+                      description: Agent condition expression to evaluate whether to apply this stream.
                       type: string
                     config:
                       additionalProperties:
@@ -75360,6 +75707,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -76243,6 +76591,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -77427,6 +77776,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -78125,6 +78475,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -78476,6 +78827,10 @@ components:
                       - after
                       - fixed_interval
                   type: array
+                frozen_after:
+                  description: A non-empty string.
+                  minLength: 1
+                  type: string
           required:
             - dsl
         - additionalProperties: false
@@ -79599,6 +79954,7 @@ components:
                   - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-esql_control'
                   - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-image'
                   - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-links'
+                  - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-aiops_log_rate_analysis'
                   - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-markdown'
                   - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-options_list_control'
                   - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-range_slider_control'
@@ -79773,6 +80129,26 @@ components:
         - type
         - config
       title: Change point detection chart
+      type: object
+    Kibana_HTTP_APIs_kbn-dashboard-panel-type-aiops_log_rate_analysis:
+      additionalProperties: false
+      properties:
+        config:
+          $ref: '#/components/schemas/Kibana_HTTP_APIs_aiops_log_rate_analysis'
+        grid:
+          $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-grid'
+        id:
+          description: The unique ID of the panel.
+          type: string
+        type:
+          enum:
+            - aiops_log_rate_analysis
+          type: string
+      required:
+        - grid
+        - type
+        - config
+      title: Log rate analysis
       type: object
     Kibana_HTTP_APIs_kbn-dashboard-panel-type-apm_service_map:
       additionalProperties: false
@@ -81227,6 +81603,7 @@ components:
                 references:
                   items:
                     $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+                  maxItems: 10000
                   type: array
                 time_range:
                   $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-es-query-server-timeRangeSchema'
@@ -81279,6 +81656,7 @@ components:
             discriminator:
               mapping:
                 aiops_change_point_chart: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-aiops_change_point_chart'
+                aiops_log_rate_analysis: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-aiops_log_rate_analysis'
                 apm_service_map: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-apm_service_map'
                 discover_session: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-discover_session'
                 esql_control: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-esql_control'
@@ -81303,6 +81681,7 @@ components:
               - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-esql_control'
               - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-image'
               - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-links'
+              - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-aiops_log_rate_analysis'
               - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-markdown'
               - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-options_list_control'
               - $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-dashboard-panel-type-range_slider_control'
@@ -82106,6 +82485,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -83605,6 +83985,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -83827,6 +84208,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -87438,6 +87820,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -88504,6 +88887,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -91051,7 +91435,7 @@ components:
           nullable: true
           type: string
         condition:
-          description: '**Experimental.** Agent condition expression to evaluate whether to apply this integration to its inputs.'
+          description: Agent condition expression to evaluate whether to apply this integration to its inputs.
           type: string
         created_at:
           type: string
@@ -91105,7 +91489,7 @@ components:
                   compiled_input:
                     nullable: true
                   condition:
-                    description: '**Experimental.** Agent condition expression to evaluate whether to apply this input.'
+                    description: Agent condition expression to evaluate whether to apply this input.
                     type: string
                   config:
                     additionalProperties:
@@ -91144,7 +91528,7 @@ components:
                         compiled_stream:
                           nullable: true
                         condition:
-                          description: '**Experimental.** Agent condition expression to evaluate whether to apply this stream.'
+                          description: Agent condition expression to evaluate whether to apply this stream.
                           type: string
                         config:
                           additionalProperties:
@@ -91264,7 +91648,7 @@ components:
                 type: object
                 properties:
                   condition:
-                    description: '**Experimental.** Agent condition expression to evaluate whether to apply this input.'
+                    description: Agent condition expression to evaluate whether to apply this input.
                     type: string
                   deprecated:
                     $ref: '#/components/schemas/Kibana_HTTP_APIs_deprecation_info'
@@ -91277,7 +91661,7 @@ components:
                       type: object
                       properties:
                         condition:
-                          description: '**Experimental.** Agent condition expression to evaluate whether to apply this stream.'
+                          description: Agent condition expression to evaluate whether to apply this stream.
                           type: string
                         deprecated:
                           $ref: '#/components/schemas/Kibana_HTTP_APIs_deprecation_info'
@@ -91740,6 +92124,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -92633,6 +93018,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -93040,6 +93426,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         region:
           additionalProperties: false
@@ -93213,6 +93600,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         region:
           anyOf:
@@ -94463,7 +94851,7 @@ components:
                 - gcp
               type: string
         condition:
-          description: '**Experimental.** Agent condition expression to evaluate whether to apply this integration to its inputs.'
+          description: Agent condition expression to evaluate whether to apply this integration to its inputs.
           type: string
         description:
           description: Policy description.
@@ -94498,7 +94886,7 @@ components:
             type: object
             properties:
               condition:
-                description: '**Experimental.** Agent condition expression to evaluate whether to apply this input.'
+                description: Agent condition expression to evaluate whether to apply this input.
                 type: string
               deprecated:
                 $ref: '#/components/schemas/Kibana_HTTP_APIs_deprecation_info'
@@ -94511,7 +94899,7 @@ components:
                   type: object
                   properties:
                     condition:
-                      description: '**Experimental.** Agent condition expression to evaluate whether to apply this stream.'
+                      description: Agent condition expression to evaluate whether to apply this stream.
                       type: string
                     deprecated:
                       $ref: '#/components/schemas/Kibana_HTTP_APIs_deprecation_info'
@@ -95257,6 +95645,47 @@ components:
                 - action
                 - from
                 - pattern
+            - additionalProperties: false
+              description: URI parts processor - Parse a URI into components (scheme, domain, port, path, query, fragment, ...)
+              type: object
+              properties:
+                action:
+                  enum:
+                    - uri_parts
+                  type: string
+                customIdentifier:
+                  description: Custom identifier to correlate this processor across outputs
+                  minLength: 1
+                  type: string
+                description:
+                  description: Human-readable notes about this processor step
+                  type: string
+                from:
+                  description: Source field holding the URI string to parse
+                  minLength: 1
+                  type: string
+                ignore_failure:
+                  description: Continue pipeline execution if this processor fails
+                  type: boolean
+                ignore_missing:
+                  description: Skip processing when source field is missing
+                  type: boolean
+                keep_original:
+                  description: If true (default), preserve the original URI string alongside the extracted parts
+                  type: boolean
+                remove_if_successful:
+                  description: If true, remove the source field after a successful parse. Source field is kept on failure.
+                  type: boolean
+                to:
+                  description: 'Target field / column prefix for the extracted URI components (defaults to "url"). May equal `from` — the canonical ECS shape parses the `url` field in place. Note: combining `to === from` with `remove_if_successful: true` nulls the parsed object after writing it.'
+                  minLength: 1
+                  type: string
+                where:
+                  $ref: '#/components/schemas/Kibana_HTTP_APIs_Condition'
+                  description: Conditional expression controlling whether this processor runs
+              required:
+                - action
+                - from
             - additionalProperties: false
               description: Date processor - Parse dates from strings using one or more expected formats
               type: object
@@ -96335,6 +96764,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -96930,6 +97360,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -97793,6 +98224,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -98686,6 +99118,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -99285,7 +99718,7 @@ components:
           nullable: true
           type: string
         condition:
-          description: '**Experimental.** Agent condition expression to evaluate whether to apply this integration to its inputs.'
+          description: Agent condition expression to evaluate whether to apply this integration to its inputs.
           type: string
         description:
           description: Package policy description
@@ -99319,7 +99752,7 @@ components:
             type: object
             properties:
               condition:
-                description: '**Experimental.** Agent condition expression to evaluate whether to apply this input.'
+                description: Agent condition expression to evaluate whether to apply this input.
                 type: string
               config:
                 additionalProperties:
@@ -99358,7 +99791,7 @@ components:
                     compiled_stream:
                       nullable: true
                     condition:
-                      description: '**Experimental.** Agent condition expression to evaluate whether to apply this stream.'
+                      description: Agent condition expression to evaluate whether to apply this stream.
                       type: string
                     config:
                       additionalProperties:
@@ -100211,6 +100644,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -101110,6 +101544,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         sampling:
           default: 1
@@ -102991,6 +103426,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         styling:
           $ref: '#/components/schemas/Kibana_HTTP_APIs_xyStyling'
@@ -103130,6 +103566,7 @@ components:
         references:
           items:
             $ref: '#/components/schemas/Kibana_HTTP_APIs_kbn-content-management-utils-referenceSchema'
+          maxItems: 10000
           type: array
         styling:
           $ref: '#/components/schemas/Kibana_HTTP_APIs_xyStyling'
@@ -120269,6 +120706,8 @@ components:
               $ref: '#/components/schemas/Security_Osquery_API_PackDescription'
             enabled:
               $ref: '#/components/schemas/Security_Osquery_API_Enabled'
+            interval:
+              $ref: '#/components/schemas/Security_Osquery_API_PackInterval'
             name:
               $ref: '#/components/schemas/Security_Osquery_API_PackName'
             policy_ids:
@@ -120290,6 +120729,10 @@ components:
                     type: string
                   removed:
                     type: boolean
+                  rrule_schedule:
+                    $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
+                  schedule_type:
+                    $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
                   snapshot:
                     type: boolean
                   timeout:
@@ -120297,9 +120740,13 @@ components:
                   version:
                     type: string
               type: array
+            rrule_schedule:
+              $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
             saved_object_id:
               description: The saved object ID of the copied pack.
               type: string
+            schedule_type:
+              $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
             shards:
               description: Shard configuration as an array of key-value pairs.
               items:
@@ -120593,12 +121040,18 @@ components:
           $ref: '#/components/schemas/Security_Osquery_API_PackDescription'
         enabled:
           $ref: '#/components/schemas/Security_Osquery_API_Enabled'
+        interval:
+          $ref: '#/components/schemas/Security_Osquery_API_PackInterval'
         name:
           $ref: '#/components/schemas/Security_Osquery_API_PackName'
         policy_ids:
           $ref: '#/components/schemas/Security_Osquery_API_PolicyIds'
         queries:
           $ref: '#/components/schemas/Security_Osquery_API_ObjectQueries'
+        rrule_schedule:
+          $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
+        schedule_type:
+          $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
         shards:
           $ref: '#/components/schemas/Security_Osquery_API_Shards'
     Security_Osquery_API_CreatePacksResponse:
@@ -120649,15 +121102,21 @@ components:
               $ref: '#/components/schemas/Security_Osquery_API_PackDescription'
             enabled:
               $ref: '#/components/schemas/Security_Osquery_API_Enabled'
+            interval:
+              $ref: '#/components/schemas/Security_Osquery_API_PackInterval'
             name:
               $ref: '#/components/schemas/Security_Osquery_API_PackName'
             policy_ids:
               $ref: '#/components/schemas/Security_Osquery_API_PolicyIds'
             queries:
               $ref: '#/components/schemas/Security_Osquery_API_ObjectQueries'
+            rrule_schedule:
+              $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
             saved_object_id:
               description: The saved object ID of the pack.
               type: string
+            schedule_type:
+              $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
             shards:
               description: Shard configuration as an array of key-value pairs.
               items:
@@ -121091,6 +121550,8 @@ components:
               $ref: '#/components/schemas/Security_Osquery_API_PackDescription'
             enabled:
               $ref: '#/components/schemas/Security_Osquery_API_Enabled'
+            interval:
+              $ref: '#/components/schemas/Security_Osquery_API_PackInterval'
             name:
               $ref: '#/components/schemas/Security_Osquery_API_PackName'
             namespaces:
@@ -121105,9 +121566,13 @@ components:
             read_only:
               description: Whether the pack is read-only (true for prebuilt packs).
               type: boolean
+            rrule_schedule:
+              $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
             saved_object_id:
               description: The saved object ID of the pack.
               type: string
+            schedule_type:
+              $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
             shards:
               $ref: '#/components/schemas/Security_Osquery_API_Shards'
             type:
@@ -121175,6 +121640,8 @@ components:
                 $ref: '#/components/schemas/Security_Osquery_API_PackDescription'
               enabled:
                 $ref: '#/components/schemas/Security_Osquery_API_Enabled'
+              interval:
+                $ref: '#/components/schemas/Security_Osquery_API_PackInterval'
               name:
                 $ref: '#/components/schemas/Security_Osquery_API_PackName'
               policy_ids:
@@ -121196,6 +121663,10 @@ components:
                       type: string
                     removed:
                       type: boolean
+                    rrule_schedule:
+                      $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
+                    schedule_type:
+                      $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
                     snapshot:
                       type: boolean
                     timeout:
@@ -121206,9 +121677,13 @@ components:
               read_only:
                 description: Whether the pack is read-only (true for prebuilt packs).
                 type: boolean
+              rrule_schedule:
+                $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
               saved_object_id:
                 description: The saved object ID of the pack.
                 type: string
+              schedule_type:
+                $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
               updated_at:
                 format: date-time
                 type: string
@@ -121656,8 +122131,12 @@ components:
           $ref: '#/components/schemas/Security_Osquery_API_Query'
         removed:
           $ref: '#/components/schemas/Security_Osquery_API_Removed'
+        rrule_schedule:
+          $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
         saved_query_id:
           $ref: '#/components/schemas/Security_Osquery_API_SavedQueryId'
+        schedule_type:
+          $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
         snapshot:
           $ref: '#/components/schemas/Security_Osquery_API_Snapshot'
         version:
@@ -121675,6 +122154,14 @@ components:
       type: string
     Security_Osquery_API_PackIdOrUndefined:
       $ref: '#/components/schemas/Security_Osquery_API_PackId'
+      nullable: true
+    Security_Osquery_API_PackInterval:
+      description: Pack-level interval, in seconds. Used when `schedule_type` is `interval`. Mutually exclusive with `rrule_schedule`.
+      example: 60
+      minimum: 1
+      type: integer
+    Security_Osquery_API_PackIntervalOrUndefined:
+      $ref: '#/components/schemas/Security_Osquery_API_PackInterval'
       nullable: true
     Security_Osquery_API_PackName:
       description: The pack name.
@@ -121725,6 +122212,58 @@ components:
       type: boolean
     Security_Osquery_API_RemovedOrUndefined:
       $ref: '#/components/schemas/Security_Osquery_API_Removed'
+      nullable: true
+    Security_Osquery_API_RRuleScheduleConfig:
+      description: |
+        RRULE schedule configuration consumed by osquerybeat. Loose date
+        forms like `"2024-01-01"` are rejected with 400. DTSTART is NOT
+        embedded in `rrule`; the separate `start_date` field is the
+        schedule anchor.
+      type: object
+      properties:
+        end_date:
+          description: Optional RFC 3339 datetime string for the schedule's end. MUST be after `start_date`.
+          example: '2024-12-31T23:59:59Z'
+          format: date-time
+          maxLength: 64
+          type: string
+        rrule:
+          description: |
+            Fully serialized RFC 5545 RRULE string (e.g.
+            `"FREQ=WEEKLY;BYDAY=MO,WE,FR"`). The Kibana UI writes only a
+            subset of parts — `FREQ`, `INTERVAL`, `BYDAY`, `BYMONTHDAY`,
+            `BYMONTH` — but the server accepts and round-trips any
+            well-formed parts (other recognized parts like `BYHOUR`,
+            `BYMINUTE`, `BYSETPOS`, `WKST`, `COUNT`, `UNTIL` are preserved
+            verbatim).
+          example: FREQ=WEEKLY;BYDAY=MO,WE,FR
+          maxLength: 2048
+          type: string
+        splay:
+          description: |
+            Optional Go duration string for splay (random execution delay),
+            e.g. `"30s"`, `"5m"`, `"1h"`. The Kibana form writes single-unit
+            values only; compound durations (`"1h30m"`) are tolerated on
+            read for round-trip safety with osquerybeat's writer. Maximum
+            12 hours (43200 seconds).
+          example: 5m
+          maxLength: 64
+          type: string
+        start_date:
+          description: RFC 3339 datetime string for the schedule's start.
+          example: '2024-01-01T00:00:00Z'
+          format: date-time
+          maxLength: 64
+          type: string
+        timeout:
+          description: Optional query execution timeout, in seconds. Defaults to 60 in osquerybeat when unset.
+          example: 60
+          type: number
+      required:
+        - rrule
+        - start_date
+    Security_Osquery_API_RRuleScheduleConfigOrUndefined:
+      $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
       nullable: true
     Security_Osquery_API_SavedQueryDescription:
       description: The saved query description.
@@ -121810,6 +122349,20 @@ components:
           required:
             - sourceType
             - source
+    Security_Osquery_API_ScheduleType:
+      description: |
+        Discriminator for the pack's schedule mode. `interval` uses native
+        osqueryd interval scheduling (seconds). `rrule` uses osquerybeat's
+        RRULE-based recurrence scheduling. Per-query overrides MUST use the
+        same mode as the pack — cross-mode overrides are rejected with 400.
+      enum:
+        - interval
+        - rrule
+      example: rrule
+      type: string
+    Security_Osquery_API_ScheduleTypeOrUndefined:
+      $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
+      nullable: true
     Security_Osquery_API_Shards:
       additionalProperties:
         type: number
@@ -121899,12 +122452,18 @@ components:
           $ref: '#/components/schemas/Security_Osquery_API_PackDescription'
         enabled:
           $ref: '#/components/schemas/Security_Osquery_API_Enabled'
+        interval:
+          $ref: '#/components/schemas/Security_Osquery_API_PackInterval'
         name:
           $ref: '#/components/schemas/Security_Osquery_API_PackName'
         policy_ids:
           $ref: '#/components/schemas/Security_Osquery_API_PolicyIds'
         queries:
           $ref: '#/components/schemas/Security_Osquery_API_ObjectQueries'
+        rrule_schedule:
+          $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
+        schedule_type:
+          $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
         shards:
           $ref: '#/components/schemas/Security_Osquery_API_Shards'
     Security_Osquery_API_UpdatePacksResponse:
@@ -121952,15 +122511,21 @@ components:
               $ref: '#/components/schemas/Security_Osquery_API_PackDescription'
             enabled:
               $ref: '#/components/schemas/Security_Osquery_API_Enabled'
+            interval:
+              $ref: '#/components/schemas/Security_Osquery_API_PackInterval'
             name:
               $ref: '#/components/schemas/Security_Osquery_API_PackName'
             policy_ids:
               $ref: '#/components/schemas/Security_Osquery_API_PolicyIds'
             queries:
               $ref: '#/components/schemas/Security_Osquery_API_ObjectQueries'
+            rrule_schedule:
+              $ref: '#/components/schemas/Security_Osquery_API_RRuleScheduleConfig'
             saved_object_id:
               description: The saved object ID of the pack.
               type: string
+            schedule_type:
+              $ref: '#/components/schemas/Security_Osquery_API_ScheduleType'
             shards:
               $ref: '#/components/schemas/Security_Osquery_API_Shards'
             updated_at:
