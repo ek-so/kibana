@@ -22,8 +22,11 @@ import {
   organizeGlobalSearchResults,
 } from '@kbn/global-search-plugin/public';
 import useDebounce from 'react-use/lib/useDebounce';
+import useObservable from 'react-use/lib/useObservable';
 import { apm } from '@elastic/apm-rum';
 import useMountedState from 'react-use/lib/useMountedState';
+import { getNavigationParentTitleForUrl } from '@kbn/core-chrome-browser';
+import { map, of } from 'rxjs';
 import type { SearchSuggestion } from '../suggestions';
 import { getSuggestions } from '../suggestions';
 import type { SearchProps } from '../components/types';
@@ -91,8 +94,33 @@ export const useSearchState = ({
   navigateToUrl,
   reportEvent,
   onResultSelect,
+  getNavigation$,
+  prependBasePath = (path) => path,
 }: UseSearchStateOptions): SearchStateResult => {
   const isMounted = useMountedState();
+
+  const navigationTree$ = useMemo(() => {
+    if (!getNavigation$) {
+      return of(null);
+    }
+    return getNavigation$().pipe(map((state) => state?.navigationTree ?? null));
+  }, [getNavigation$]);
+  const navigationTree = useObservable(navigationTree$, null);
+
+  const getNavigationParentTitle = useCallback(
+    (url: string) => {
+      if (!navigationTree) {
+        return undefined;
+      }
+
+      return getNavigationParentTitleForUrl({
+        url,
+        navigationTree,
+        prependBasePath,
+      });
+    },
+    [navigationTree, prependBasePath]
+  );
 
   const [initialLoad, setInitialLoad] = useState(false);
   const [loadGeneration, setLoadGeneration] = useState(0);
@@ -177,13 +205,14 @@ export const useSearchState = ({
           suggestions,
           searchTagIds,
           getTagList: taggingApi?.ui.getTagList,
+          getNavigationParentTitle,
           view: resultsView,
           onShowAllRecent: showAllRecent,
           onBackToMain: backToMainResults,
         })
       );
     },
-    [taggingApi, resultsView, showAllRecent, backToMainResults]
+    [taggingApi, resultsView, showAllRecent, backToMainResults, getNavigationParentTitle]
   );
 
   useEffect(() => {
@@ -194,6 +223,15 @@ export const useSearchState = ({
 
     updateOptions(params.results, params.suggestions, params.searchTagIds, params.term);
   }, [resultsView, updateOptions, initialLoad]);
+
+  useEffect(() => {
+    const params = lastUpdateParamsRef.current;
+    if (!params || !initialLoad) {
+      return;
+    }
+
+    updateOptions(params.results, params.suggestions, params.searchTagIds, params.term);
+  }, [navigationTree, updateOptions, initialLoad]);
 
   const triggerInitialLoad = useCallback(() => {
     setResultsView('main');

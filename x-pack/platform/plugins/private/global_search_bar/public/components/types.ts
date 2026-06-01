@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import type { ChromeStyle } from '@kbn/core-chrome-browser';
+import type { ChromeStyle, NavigationTreeDefinitionUI } from '@kbn/core-chrome-browser';
 import type { ApplicationStart } from '@kbn/core/public';
 import type { GlobalSearchPluginStart } from '@kbn/global-search-plugin/public';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
@@ -17,6 +17,10 @@ export const SEARCH_MODAL_HEIGHT_VH = 50;
 export const SEARCH_MODAL_WIDTH_PX = 800;
 export const SEARCH_MODAL_ROW_HEIGHT_PX = 68;
 
+export interface ProjectNavigationState {
+  navigationTree: NavigationTreeDefinitionUI;
+}
+
 /* @internal */
 export interface SearchProps {
   globalSearch: GlobalSearchPluginStart & { searchCharLimit: number };
@@ -24,6 +28,8 @@ export interface SearchProps {
   reportEvent: EventReporter;
   taggingApi?: SavedObjectTaggingPluginStart;
   basePathUrl: string;
+  getNavigation$?: () => Observable<ProjectNavigationState | null>;
+  prependBasePath?: (path: string) => string;
 }
 
 /* @internal */

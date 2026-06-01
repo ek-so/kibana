@@ -67,3 +67,10 @@ export type {
   SidebarStart,
   GlobalSearchConfig,
 } from './src';
+
+export {
+  flattenNav,
+  findActiveNodes,
+  stripQueryParams,
+  getNavigationParentTitleForUrl,
+} from './src/project_navigation_utils';

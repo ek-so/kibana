@@ -19,134 +19,14 @@ import type {
   CloudLinks,
   SolutionId,
 } from '@kbn/core-chrome-browser/src';
-import type { Location } from 'history';
 import type { SideNavigationSection } from '@kbn/core-chrome-browser/src/project_navigation';
+import {
+  findActiveNodes,
+  flattenNav,
+  stripQueryParams,
+} from '@kbn/core-chrome-browser/src/project_navigation_utils';
 
-const wrapIdx = (index: number): string => `[${index}]`;
-
-/**
- * Flatten the navigation tree into a record of path => node
- * for quicker access when detecting the active path
- *
- * @param navTree The navigation tree to flatten
- * @param prefix Array of path prefix (used in the recursion)
- * @returns The flattened navigation tree
- */
-export const flattenNav = (
-  navTree: ChromeProjectNavigationNode[],
-  prefix: string[] = [],
-  acc: Record<string, ChromeProjectNavigationNode> = {}
-): Record<string, ChromeProjectNavigationNode> => {
-  for (let idx = 0; idx < navTree.length; idx++) {
-    const node = navTree[idx];
-    const updatedPrefix = [...prefix, wrapIdx(idx)];
-    const path = updatedPrefix.join('');
-    const { children, ...rest } = node;
-    acc[path] = children?.length ? rest : node;
-    if (children?.length) {
-      flattenNav(children, updatedPrefix, acc);
-    }
-  }
-  return acc;
-};
-
-function truncateAt(str: string, divider: string): string {
-  const position = str.indexOf(divider);
-  return position !== -1 ? str.slice(0, position) : str;
-}
-
-export const stripQueryParams = (url: string) => truncateAt(url, '?');
-
-/**
- * Extract the parent paths from a key
- *
- * @example
- * IN: "[0][1][2][0]"
- * OUT: ["[0]", "[0][1]", "[0][1][2]", "[0][1][2][0]"]
- *
- * @param key The key to extract parent paths from
- * @returns An array of parent paths
- */
-function extractParentPaths(key: string, navTree: Record<string, ChromeProjectNavigationNode>) {
-  // Split the string on every '][' to get an array of values without the brackets.
-  const arr = key.split('][');
-  if (arr.length === 1) {
-    return arr;
-  }
-  // Add the brackets back in for the first and last elements, and all elements in between.
-  arr[0] = `${arr[0]}]`;
-  arr[arr.length - 1] = `[${arr[arr.length - 1]}`;
-  for (let i = 1; i < arr.length - 1; i++) {
-    arr[i] = `[${arr[i]}]`;
-  }
-
-  return arr
-    .reduce<string[]>((acc, _currentValue, currentIndex) => {
-      acc.push(arr.slice(0, currentIndex + 1).join(''));
-      return acc;
-    }, [])
-    .filter((k) => Boolean(navTree[k]));
-}
-
-/**
- * Find the active nodes in the navigation tree based on the current Location.pathname
- * Note that the pathname cand match multiple navigation tree branches, each branch
- * will be returned as an array of nodes.
- *
- * @param currentPathname The current Location.pathname
- * @param navTree The flattened navigation tree
- * @returns The active nodes
- */
-export const findActiveNodes = (
-  currentPathname: string,
-  navTree: Record<string, ChromeProjectNavigationNode>,
-  location?: Location,
-  prepend: (path: string) => string = (path) => path
-): ChromeProjectNavigationNode[][] => {
-  const activeNodes: ChromeProjectNavigationNode[][] = [];
-  let maxLength = 0;
-  const matchesByLength = new Map<number, string[]>();
-
-  const activeNodeFromKey = (key: string): ChromeProjectNavigationNode => ({
-    ...navTree[key],
-  });
-
-  Object.entries(navTree).forEach(([key, node]) => {
-    if (node.getIsActive && location) {
-      const isActive = node.getIsActive({ pathNameSerialized: currentPathname, location, prepend });
-      if (isActive) {
-        const keysWithParents = extractParentPaths(key, navTree);
-        activeNodes.push(keysWithParents.map(activeNodeFromKey));
-      }
-      return;
-    }
-
-    const nodePath = node.deepLink?.url ? stripQueryParams(node.deepLink.url) : undefined;
-
-    if (nodePath) {
-      const match = currentPathname.startsWith(nodePath);
-
-      if (match) {
-        const { length } = nodePath;
-        const bucket = matchesByLength.get(length) ?? [];
-        bucket.push(key);
-        bucket.sort((a, b) => b.length - a.length);
-        matchesByLength.set(length, bucket);
-        if (length > maxLength) maxLength = length;
-      }
-    }
-  });
-
-  const longestMatch = matchesByLength.get(maxLength);
-  if (longestMatch) {
-    longestMatch.forEach((key) => {
-      const keysWithParents = extractParentPaths(key, navTree);
-      activeNodes.push(keysWithParents.map(activeNodeFromKey));
-    });
-  }
-
-  return activeNodes;
-};
+export { findActiveNodes, flattenNav, stripQueryParams };
 
 let uniqueId = 0;
 const generateUniqueNodeId = () => `node${uniqueId++}`;

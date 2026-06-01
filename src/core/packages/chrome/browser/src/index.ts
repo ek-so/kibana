@@ -73,3 +73,10 @@ export type {
 } from './sidebar';
 
 export type { GlobalSearchConfig } from './chrome_next/global_search';
+
+export {
+  flattenNav,
+  findActiveNodes,
+  stripQueryParams,
+  getNavigationParentTitleForUrl,
+} from './project_navigation_utils';

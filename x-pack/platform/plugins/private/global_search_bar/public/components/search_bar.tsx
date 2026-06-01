@@ -40,6 +40,8 @@ export const SearchBar = ({
   reportEvent,
   chromeStyle$,
   basePathUrl,
+  getNavigation$,
+  prependBasePath,
 }: SearchBarProps) => {
   const { euiTheme } = useEuiTheme();
   const chromeStyle = useObservable(chromeStyle$);
@@ -69,6 +71,8 @@ export const SearchBar = ({
     taggingApi,
     navigateToUrl,
     reportEvent,
+    getNavigation$,
+    prependBasePath,
     onResultSelect: () => {
       (document.activeElement as HTMLElement).blur();
       if (searchRef.current) {

@@ -29,13 +29,15 @@ const buildResultOptions = ({
   items,
   searchTagIds,
   getTagList,
+  getNavigationParentTitle,
 }: {
   items: GlobalSearchBucket['items'];
   searchTagIds: string[];
   getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList'];
+  getNavigationParentTitle?: (url: string) => string | undefined;
 }): EuiSelectableTemplateSitewideOption[] =>
   items.map((item) => ({
-    ...resultToOption(item, searchTagIds, getTagList),
+    ...resultToOption(item, searchTagIds, getTagList, getNavigationParentTitle),
     'data-test-subj': `nav-search-option`,
   }));
 
@@ -45,6 +47,7 @@ export const buildSelectableOptionsFromBuckets = ({
   suggestions,
   searchTagIds,
   getTagList,
+  getNavigationParentTitle,
   view = 'main',
   onShowAllRecent,
   onBackToMain,
@@ -54,6 +57,7 @@ export const buildSelectableOptionsFromBuckets = ({
   suggestions: SearchSuggestion[];
   searchTagIds: string[];
   getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList'];
+  getNavigationParentTitle?: (url: string) => string | undefined;
   view?: GlobalSearchResultsView;
   onShowAllRecent?: () => void;
   onBackToMain?: () => void;
@@ -73,7 +77,7 @@ export const buildSelectableOptionsFromBuckets = ({
         prepend: onBackToMain ? <RecentBucketBackButton onClick={onBackToMain} /> : undefined,
         'data-test-subj': `global-search-bucket-${GLOBAL_SEARCH_BUCKET_RECENT}-all`,
       },
-      ...buildResultOptions({ items: recentItems, searchTagIds, getTagList }),
+      ...buildResultOptions({ items: recentItems, searchTagIds, getTagList, getNavigationParentTitle }),
     ];
   }
 
@@ -105,7 +109,7 @@ export const buildSelectableOptionsFromBuckets = ({
       'data-test-subj': `global-search-bucket-${bucket.id}`,
     });
 
-    options.push(...buildResultOptions({ items: visibleItems, searchTagIds, getTagList }));
+    options.push(...buildResultOptions({ items: visibleItems, searchTagIds, getTagList, getNavigationParentTitle }));
   }
 
   return options;

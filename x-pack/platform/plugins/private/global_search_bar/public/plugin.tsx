@@ -12,10 +12,12 @@ import type {
   Plugin,
   PluginInitializerContext,
 } from '@kbn/core/public';
+import type { InternalChromeStart } from '@kbn/core-chrome-browser-internal';
 import type { GlobalSearchPluginStart } from '@kbn/global-search-plugin/public';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import type { UsageCollectionSetup } from '@kbn/usage-collection-plugin/public';
 import React from 'react';
+import { map } from 'rxjs';
 import { toMountPoint } from '@kbn/react-kibana-mount';
 import { SearchBar } from './components/search_bar';
 import type { GlobalSearchBarConfigType } from './types';
@@ -49,6 +51,7 @@ export class GlobalSearchBarPlugin implements Plugin<{}, {}, {}, GlobalSearchBar
     const { globalSearch, savedObjectsTagging, usageCollection } = startDeps;
     const { application, http } = core;
     const reportEvent = new EventReporter({ analytics: core.analytics, usageCollection });
+    const internalChrome = core.chrome as InternalChromeStart;
 
     const searchProps: SearchProps = {
       globalSearch: { ...globalSearch, searchCharLimit: this.config.input_max_limit },
@@ -56,6 +59,11 @@ export class GlobalSearchBarPlugin implements Plugin<{}, {}, {}, GlobalSearchBar
       taggingApi: savedObjectsTagging,
       basePathUrl: http.basePath.prepend('/plugins/globalSearchBar/assets/'),
       reportEvent,
+      getNavigation$: internalChrome.project?.getNavigation$
+        ? () =>
+            internalChrome.project.getNavigation$().pipe(map(({ navigationTree }) => ({ navigationTree })))
+        : undefined,
+      prependBasePath: http.basePath.prepend.bind(http.basePath),
     };
 
     let activeModalRef: OverlayRef | null = null;

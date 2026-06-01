@@ -30,7 +30,6 @@ describe('resultToOption', () => {
       type: input.type,
       icon: { type: expect.any(String) },
       'data-test-subj': expect.any(String),
-      meta: expect.any(Array),
     });
   });
 
@@ -79,36 +78,6 @@ describe('resultToOption', () => {
     );
   });
 
-  it('uses the category label as meta for `application` type', () => {
-    const input = createSearchResult({ type: 'application', meta: { categoryLabel: 'category' } });
-    expect(resultToOption(input, [])).toEqual(
-      expect.objectContaining({
-        meta: [{ text: 'category' }],
-      })
-    );
-  });
-
-  it('uses the type as meta for non-`application` type', () => {
-    const input = createSearchResult({ type: 'dashboard', meta: { categoryLabel: 'category' } });
-    expect(resultToOption(input, [])).toEqual(
-      expect.objectContaining({
-        meta: [{ text: 'Dashboard' }],
-      })
-    );
-  });
-
-  it('uses the displayName as meta for non-`application` type when provided', () => {
-    const input = createSearchResult({
-      type: 'dashboard',
-      meta: { categoryLabel: 'category', displayName: 'foo' },
-    });
-    expect(resultToOption(input, [])).toEqual(
-      expect.objectContaining({
-        meta: [{ text: 'Foo' }],
-      })
-    );
-  });
-
   it("doesn't crash on unknown tag", () => {
     const input = createSearchResult({
       type: 'dashboard',
@@ -133,7 +102,7 @@ describe('resultToOption', () => {
       'SearchBar: Tag with id "unknown" not found. Tag "unknown" is referenced by the search result "dashboard:id". Skipping displaying the missing tag.'
     );
     expect(option.append).toMatchInlineSnapshot(`
-      <ResultTagList
+      <GlobalSearchResultAppend
         searchTagIds={Array []}
         tags={
           Array [
@@ -146,6 +115,19 @@ describe('resultToOption', () => {
             },
           ]
         }
+      />
+    `);
+  });
+
+  it('adds the navigation parent title to the append area', () => {
+    const input = createSearchResult({ url: '/app/ml/anomaly_detection' });
+    const option = resultToOption(input, [], undefined, () => 'Machine Learning');
+
+    expect(option.append).toMatchInlineSnapshot(`
+      <GlobalSearchResultAppend
+        parentTitle="Machine Learning"
+        searchTagIds={Array []}
+        tags={Array []}
       />
     `);
   });

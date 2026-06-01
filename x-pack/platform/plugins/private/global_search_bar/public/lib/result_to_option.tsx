@@ -10,17 +10,16 @@ import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
 import type { GlobalSearchResult } from '@kbn/global-search-plugin/common/types';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import type { Tag } from '@kbn/saved-objects-tagging-oss-plugin/common';
-import { ResultTagList } from '../components/result_tag_list';
-
-const cleanMeta = (str: string) => (str.charAt(0).toUpperCase() + str.slice(1)).replace(/-/g, ' ');
+import { GlobalSearchResultAppend } from '../components/global_search_result_append';
 
 export const resultToOption = (
   result: GlobalSearchResult,
   searchTagIds: string[],
-  getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList']
+  getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList'],
+  getNavigationParentTitle?: (url: string) => string | undefined
 ): EuiSelectableTemplateSitewideOption => {
   const { id, title, url, icon, type, meta = {} } = result;
-  const { tagIds = [], categoryLabel = '' } = meta as { tagIds: string[]; categoryLabel: string };
+  const { tagIds = [] } = meta as { tagIds: string[] };
   // only displaying icons for applications and integrations
   const useIcon =
     type === 'application' ||
@@ -39,14 +38,10 @@ export const resultToOption = (
     'data-test-subj': `nav-search-option`,
   };
 
-  option.meta =
-    type === 'application'
-      ? [{ text: categoryLabel }]
-      : [{ text: cleanMeta((meta.displayName as string) ?? type) }];
+  const matchedTags: Tag[] = [];
 
   if (tagIds.length && getTagList) {
     const tagList = getTagList();
-    const tags: Tag[] = [];
     for (let i = 0; i < tagIds.length; i++) {
       const foundTag = tagList.find((tag) => tag.id === tagIds[i]);
       if (!foundTag) {
@@ -55,13 +50,21 @@ export const resultToOption = (
           `SearchBar: Tag with id "${tagIds[i]}" not found. Tag "${tagIds[i]}" is referenced by the search result "${result.type}:${result.id}". Skipping displaying the missing tag.`
         );
       } else {
-        tags.push(foundTag);
+        matchedTags.push(foundTag);
       }
     }
+  }
 
-    if (tags.length) {
-      option.append = <ResultTagList tags={tags} searchTagIds={searchTagIds} />;
-    }
+  const parentTitle = getNavigationParentTitle?.(result.url);
+
+  if (parentTitle || matchedTags.length > 0) {
+    option.append = (
+      <GlobalSearchResultAppend
+        parentTitle={parentTitle}
+        tags={matchedTags}
+        searchTagIds={searchTagIds}
+      />
+    );
   }
 
   return option;
