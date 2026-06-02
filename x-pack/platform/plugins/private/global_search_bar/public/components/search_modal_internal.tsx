@@ -6,7 +6,6 @@
  */
 
 import {
-  EuiFieldSearch,
   EuiFieldText,
   EuiHorizontalRule,
   EuiLoadingSpinner,
@@ -29,13 +28,17 @@ import { CharLimitExceededMessage } from './char_limit_exceeded_message';
 import { useSearchModalStack } from '../hooks/use_search_modal_stack';
 import {
   GLOBAL_SEARCH_MODAL_ACTIONS_SCREEN_ID,
+  GLOBAL_SEARCH_MODAL_CONFIGURATION_SCREEN_ID,
   GLOBAL_SEARCH_MODAL_FAVORITES_SCREEN_ID,
   GLOBAL_SEARCH_MODAL_RECENT_SCREEN_ID,
   isActionsModalScreen,
+  isConfigurationModalScreen,
   isFavoritesModalScreen,
   isRecentModalScreen,
 } from '../search_modal/search_modal_stack';
 import { SearchNestedBackPrepend } from './search_nested_back_prepend';
+import { SearchModalConfigureAppend } from './search_modal_configure_append';
+import { SearchModalNestedTitleHeader } from './search_modal_nested_title_header';
 import { GlobalSearchBucketHeader } from './global_search_bucket_header';
 import { SearchModalBucketSelectable } from './search_modal_bucket_selectable';
 import type { SearchModalBucketSection } from '../buckets/build_modal_bucket_sections';
@@ -59,9 +62,12 @@ export const SearchModalInternal = ({
 
   const searchValueRef = useRef('');
   const setSearchValueRef = useRef<(value: string) => void>(() => {});
-  const nestedRecentContext = isNested && isRecentModalScreen(currentScreen.id);
-  const nestedActionsContext = isNested && isActionsModalScreen(currentScreen.id);
-  const nestedFavoritesContext = isNested && isFavoritesModalScreen(currentScreen.id);
+  const isConfigurationScreen = isNested && isConfigurationModalScreen(currentScreen.id);
+  const isSearchInputNestedScreen = isNested && !isConfigurationScreen;
+  const nestedRecentContext = isSearchInputNestedScreen && isRecentModalScreen(currentScreen.id);
+  const nestedActionsContext = isSearchInputNestedScreen && isActionsModalScreen(currentScreen.id);
+  const nestedFavoritesContext =
+    isSearchInputNestedScreen && isFavoritesModalScreen(currentScreen.id);
 
   const {
     searchValue,
@@ -130,6 +136,17 @@ export const SearchModalInternal = ({
       setSearchValue(parentSnapshot.searchValue);
     }
   }, [popScreen, setSearchValue]);
+
+  const handleOpenConfiguration = useCallback(() => {
+    pushScreen(
+      {
+        id: GLOBAL_SEARCH_MODAL_CONFIGURATION_SCREEN_ID,
+        title: i18nStrings.searchConfigurationTitle,
+      },
+      searchValueRef.current
+    );
+    setSearchValueRef.current('');
+  }, [pushScreen]);
 
   useEffect(() => {
     triggerInitialLoad();
@@ -217,34 +234,52 @@ export const SearchModalInternal = ({
       <EuiModalHeader
         css={headerStyles}
         data-test-subj={
-          isNested
+          isConfigurationScreen
+            ? `${SEARCH_MODAL_SELECTOR_PREFIX}HeaderConfiguration`
+            : isSearchInputNestedScreen
             ? `${SEARCH_MODAL_SELECTOR_PREFIX}HeaderNested`
             : `${SEARCH_MODAL_SELECTOR_PREFIX}Header`
         }
       >
-        {isNested ? (
+        {isConfigurationScreen ? (
+          <SearchModalNestedTitleHeader
+            title={i18nStrings.searchConfigurationTitle}
+            onBack={handleNestedBack}
+          />
+        ) : isSearchInputNestedScreen ? (
           <EuiFieldText
             {...searchInputProps}
             type="search"
             prepend={<SearchNestedBackPrepend onClick={handleNestedBack} />}
           />
         ) : (
-          <EuiFieldSearch {...searchInputProps} />
+          <EuiFieldText
+            {...searchInputProps}
+            type="search"
+            append={<SearchModalConfigureAppend onClick={handleOpenConfiguration} />}
+          />
         )}
       </EuiModalHeader>
 
-      {searchCharLimitExceeded ? (
+      {!isConfigurationScreen && searchCharLimitExceeded ? (
         <div css={css`padding: 0 ${SEARCH_MODAL_PADDING_PX}px`}>
           <CharLimitExceededMessage basePathUrl={basePathUrl} />
         </div>
       ) : null}
 
-      <EuiModalBody css={bodyStyles}>
-        {isLoading && !hasBucketContent ? (
+      <EuiModalBody
+        css={bodyStyles}
+        data-test-subj={
+          isConfigurationScreen
+            ? `${SEARCH_MODAL_SELECTOR_PREFIX}BodyConfiguration`
+            : `${SEARCH_MODAL_SELECTOR_PREFIX}Body`
+        }
+      >
+        {!isConfigurationScreen && isLoading && !hasBucketContent ? (
           <EuiLoadingSpinner size="m" css={css`align-self: center`} />
         ) : null}
 
-        {suggestionOptions.length > 0 ? (
+        {!isConfigurationScreen && suggestionOptions.length > 0 ? (
           <section
             className="globalSearchModalBucket"
             data-test-subj="global-search-modal-bucket-suggestions"
@@ -260,25 +295,33 @@ export const SearchModalInternal = ({
           </section>
         ) : null}
 
-        {suggestionOptions.length > 0 && modalBucketSections.length > 0 ? (
+        {!isConfigurationScreen &&
+        suggestionOptions.length > 0 &&
+        modalBucketSections.length > 0 ? (
           <div className="globalSearchModalSectionDivider">
             <EuiHorizontalRule margin="none" />
           </div>
         ) : null}
 
-        {modalBucketSections.map(renderBucketSection)}
+        {!isConfigurationScreen ? modalBucketSections.map(renderBucketSection) : null}
 
-        {showEmptyState ? <EmptyMessage /> : null}
-        {showNoMatches ? <SearchPlaceholder basePath={basePathUrl} /> : null}
+        {!isConfigurationScreen && showEmptyState ? <EmptyMessage /> : null}
+        {!isConfigurationScreen && showNoMatches ? (
+          <SearchPlaceholder basePath={basePathUrl} />
+        ) : null}
       </EuiModalBody>
 
-      <EuiHorizontalRule margin="none" />
-      <EuiModalFooter
-        css={footerStyles}
-        data-test-subj={`${SEARCH_MODAL_SELECTOR_PREFIX}Footer`}
-      >
-        <SearchFooter />
-      </EuiModalFooter>
+      {!isConfigurationScreen ? (
+        <>
+          <EuiHorizontalRule margin="none" />
+          <EuiModalFooter
+            css={footerStyles}
+            data-test-subj={`${SEARCH_MODAL_SELECTOR_PREFIX}Footer`}
+          >
+            <SearchFooter />
+          </EuiModalFooter>
+        </>
+      ) : null}
     </>
   );
 };

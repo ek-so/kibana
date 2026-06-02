@@ -9,6 +9,7 @@ import { applicationServiceMock, coreMock } from '@kbn/core/public/mocks';
 import { globalSearchPluginMock } from '@kbn/global-search-plugin/public/mocks';
 import { __IntlProvider as IntlProvider } from '@kbn/i18n-react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { of } from 'rxjs';
 import { usageCollectionPluginMock } from '@kbn/usage-collection-plugin/public/mocks';
@@ -31,14 +32,16 @@ jest.mock('../hooks/use_search_state', () => ({
   }),
 }));
 
+const mockUseSearchModalStack = jest.fn(() => ({
+  currentScreen: { id: 'root', title: '' },
+  isNested: false,
+  pushScreen: jest.fn(),
+  popScreen: jest.fn(),
+  resetStack: jest.fn(),
+}));
+
 jest.mock('../hooks/use_search_modal_stack', () => ({
-  useSearchModalStack: () => ({
-    currentScreen: { id: 'root', title: '' },
-    isNested: false,
-    pushScreen: jest.fn(),
-    popScreen: jest.fn(),
-    resetStack: jest.fn(),
-  }),
+  useSearchModalStack: () => mockUseSearchModalStack(),
 }));
 
 jest.mock(
@@ -57,6 +60,15 @@ describe('SearchModalInternal', () => {
   let eventReporter: EventReporter;
 
   beforeEach(() => {
+    mockUseSearchModalStack.mockReset();
+    mockUseSearchModalStack.mockReturnValue({
+      currentScreen: { id: 'root', title: '' },
+      isNested: false,
+      pushScreen: jest.fn(),
+      popScreen: jest.fn(),
+      resetStack: jest.fn(),
+    });
+
     applications = applicationServiceMock.createStartContract();
     searchService = globalSearchPluginMock.createStartContract();
 
@@ -86,6 +98,118 @@ describe('SearchModalInternal', () => {
     expect(screen.getByTestId('chromeProjectNextSearchModalInput')).toBeInTheDocument();
     expect(screen.getByTestId('chromeProjectNextSearchModalFooter')).toBeInTheDocument();
     expect(screen.queryByTestId('nav-search-conceal')).not.toBeInTheDocument();
+  });
+
+  it('shows the configure append on the main modal search input', () => {
+    render(
+      <IntlProvider locale="en">
+        <SearchModalInternal
+          globalSearch={{ ...searchService, searchCharLimit: 1000 }}
+          navigateToUrl={applications.navigateToUrl}
+          navigateToApp={applications.navigateToApp}
+          http={core.http}
+          userProfile={core.userProfile}
+          basePathUrl={basePathUrl}
+          reportEvent={eventReporter}
+          onClose={jest.fn()}
+        />
+      </IntlProvider>
+    );
+
+    expect(screen.getByTestId('global-search-modal-configure')).toBeInTheDocument();
+  });
+
+  it('opens the configuration nested screen when configure is clicked', async () => {
+    const pushScreen = jest.fn();
+    mockUseSearchModalStack.mockReturnValue({
+      currentScreen: { id: 'root', title: '' },
+      isNested: false,
+      pushScreen,
+      popScreen: jest.fn(),
+      resetStack: jest.fn(),
+    });
+
+    render(
+      <IntlProvider locale="en">
+        <SearchModalInternal
+          globalSearch={{ ...searchService, searchCharLimit: 1000 }}
+          navigateToUrl={applications.navigateToUrl}
+          navigateToApp={applications.navigateToApp}
+          http={core.http}
+          userProfile={core.userProfile}
+          basePathUrl={basePathUrl}
+          reportEvent={eventReporter}
+          onClose={jest.fn()}
+        />
+      </IntlProvider>
+    );
+
+    await userEvent.click(screen.getByTestId('global-search-modal-configure'));
+
+    expect(pushScreen).toHaveBeenCalledWith(
+      { id: 'configuration', title: 'Search configuration' },
+      ''
+    );
+  });
+
+  it('renders the configuration nested screen without a search input', () => {
+    mockUseSearchModalStack.mockReturnValueOnce({
+      currentScreen: { id: 'configuration', title: 'Search configuration' },
+      isNested: true,
+      pushScreen: jest.fn(),
+      popScreen: jest.fn(),
+      resetStack: jest.fn(),
+    });
+
+    render(
+      <IntlProvider locale="en">
+        <SearchModalInternal
+          globalSearch={{ ...searchService, searchCharLimit: 1000 }}
+          navigateToUrl={applications.navigateToUrl}
+          navigateToApp={applications.navigateToApp}
+          http={core.http}
+          userProfile={core.userProfile}
+          basePathUrl={basePathUrl}
+          reportEvent={eventReporter}
+          onClose={jest.fn()}
+        />
+      </IntlProvider>
+    );
+
+    expect(screen.getByTestId('chromeProjectNextSearchModalHeaderConfiguration')).toBeInTheDocument();
+    expect(screen.getByText('Search configuration')).toBeInTheDocument();
+    expect(screen.getByTestId('global-search-nested-back')).toBeInTheDocument();
+    expect(screen.queryByTestId('chromeProjectNextSearchModalInput')).not.toBeInTheDocument();
+    expect(screen.getByTestId('chromeProjectNextSearchModalBodyConfiguration')).toBeInTheDocument();
+    expect(screen.queryByTestId('chromeProjectNextSearchModalFooter')).not.toBeInTheDocument();
+  });
+
+  it('does not show the configure append in nested modal views', () => {
+    mockUseSearchModalStack.mockReturnValueOnce({
+      currentScreen: { id: 'recent', title: 'Recent' },
+      isNested: true,
+      pushScreen: jest.fn(),
+      popScreen: jest.fn(),
+      resetStack: jest.fn(),
+    });
+
+    render(
+      <IntlProvider locale="en">
+        <SearchModalInternal
+          globalSearch={{ ...searchService, searchCharLimit: 1000 }}
+          navigateToUrl={applications.navigateToUrl}
+          navigateToApp={applications.navigateToApp}
+          http={core.http}
+          userProfile={core.userProfile}
+          basePathUrl={basePathUrl}
+          reportEvent={eventReporter}
+          onClose={jest.fn()}
+        />
+      </IntlProvider>
+    );
+
+    expect(screen.queryByTestId('global-search-modal-configure')).not.toBeInTheDocument();
+    expect(screen.getByTestId('global-search-nested-back')).toBeInTheDocument();
   });
 
   it('reports searchFocus on mount and searchBlur on unmount', () => {

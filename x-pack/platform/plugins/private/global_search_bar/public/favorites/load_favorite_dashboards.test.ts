@@ -46,6 +46,7 @@ describe('loadFavoriteDashboardResults', () => {
       id: 'dash-1',
       title: 'My dashboard',
       type: 'dashboard',
+      icon: 'productDashboard',
       url: '/app/dashboards#/view/dash-1',
     });
   });

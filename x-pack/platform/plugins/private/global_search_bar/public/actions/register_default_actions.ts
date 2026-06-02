@@ -6,6 +6,7 @@
  */
 
 import { i18n } from '@kbn/i18n';
+import { DASHBOARDS_PARENT_TITLE } from '../lib/dashboards_app';
 import type { GlobalSearchAction, GlobalSearchActionExecuteContext } from './types';
 import { getGlobalSearchActionById, registerGlobalSearchAction } from './registry';
 
@@ -13,10 +14,6 @@ const CREATE_DASHBOARD_ACTION_ID = 'create-dashboard';
 const CREATE_DATA_VIEW_ACTION_ID = 'create-data-view';
 const CREATE_VISUALIZATION_ACTION_ID = 'create-visualization';
 const CREATE_RULE_ACTION_ID = 'create-rule';
-
-const dashboardsAppendLabel = i18n.translate('xpack.globalSearchBar.actions.createDashboard.append', {
-  defaultMessage: 'Dashboards',
-});
 
 const registerActionIfAbsent = (action: GlobalSearchAction): void => {
   if (getGlobalSearchActionById(action.id)) {
@@ -32,7 +29,7 @@ export const registerDefaultGlobalSearchActions = (): void => {
     title: i18n.translate('xpack.globalSearchBar.actions.createDashboard.title', {
       defaultMessage: 'Create dashboard',
     }),
-    appendLabel: dashboardsAppendLabel,
+    appendLabel: DASHBOARDS_PARENT_TITLE,
     icon: 'plus',
     execute: ({ navigateToApp }: GlobalSearchActionExecuteContext) => {
       // Same navigation as the "Create dashboard" button on the All dashboards listing.
@@ -59,7 +56,7 @@ export const registerDefaultGlobalSearchActions = (): void => {
     title: i18n.translate('xpack.globalSearchBar.actions.createVisualization.title', {
       defaultMessage: 'Create visualization',
     }),
-    appendLabel: dashboardsAppendLabel,
+    appendLabel: DASHBOARDS_PARENT_TITLE,
     icon: 'chartBarVertical',
     execute: ({ navigateToApp }: GlobalSearchActionExecuteContext) => {
       navigateToApp('lens', { path: '/' });

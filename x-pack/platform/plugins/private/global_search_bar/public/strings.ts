@@ -41,6 +41,24 @@ export const i18nStrings = {
   nestedBackAriaText: i18n.translate('xpack.globalSearchBar.searchBar.nested.backAriaText', {
     defaultMessage: 'Back to previous search',
   }),
+  configureSearchResultsTooltip: i18n.translate(
+    'xpack.globalSearchBar.searchModal.configureSearchResultsTooltip',
+    {
+      defaultMessage: 'Configure search results',
+    }
+  ),
+  configureSearchResultsAriaText: i18n.translate(
+    'xpack.globalSearchBar.searchModal.configureSearchResultsAriaText',
+    {
+      defaultMessage: 'Configure search results',
+    }
+  ),
+  searchConfigurationTitle: i18n.translate(
+    'xpack.globalSearchBar.searchModal.searchConfigurationTitle',
+    {
+      defaultMessage: 'Search configuration',
+    }
+  ),
   placeholderText: i18n.translate('xpack.globalSearchBar.searchBar.placeholder', {
     defaultMessage: 'Find pages, perform actions, ask Agent and more...',
   }),

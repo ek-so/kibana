@@ -39,7 +39,7 @@ describe('GlobalSearchResultPrependIcon', () => {
 
   it('renders with accent icon and background for favorite prepends', () => {
     const { container, getByTestId } = render(
-      <GlobalSearchResultPrependIcon type="dashboardApp" color="accent" />
+      <GlobalSearchResultPrependIcon type="productDashboard" color="accent" />
     );
 
     const wrapper = getByTestId('globalSearchResultPrependIcon');
@@ -47,7 +47,7 @@ describe('GlobalSearchResultPrependIcon', () => {
       backgroundColor: 'var(--euiColorBackgroundLightAccent)',
     });
     expect(
-      container.querySelector('[data-euiicon-type="dashboardApp"]:not([color])')
+      container.querySelector('[data-euiicon-type="productDashboard"]:not([color])')
     ).toBeTruthy();
   });
 });
