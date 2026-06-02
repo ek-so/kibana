@@ -15,14 +15,38 @@ import { usageCollectionPluginMock } from '@kbn/usage-collection-plugin/public/m
 import { EventReporter } from '../telemetry';
 import { SearchModalInternal } from './search_modal_internal';
 
+jest.mock('../hooks/use_search_state', () => ({
+  useSearchState: () => ({
+    searchValue: '',
+    setSearchValue: jest.fn(),
+    isLoading: false,
+    searchCharLimitExceeded: false,
+    onChange: jest.fn(),
+    onActiveOptionChange: jest.fn(),
+    selectableListProps: {},
+    setSearchRef: jest.fn(),
+    triggerInitialLoad: jest.fn(),
+    modalBucketSections: [],
+    suggestionOptions: [],
+  }),
+}));
+
+jest.mock('../hooks/use_search_modal_stack', () => ({
+  useSearchModalStack: () => ({
+    currentScreen: { id: 'root', title: '' },
+    isNested: false,
+    pushScreen: jest.fn(),
+    popScreen: jest.fn(),
+    resetStack: jest.fn(),
+  }),
+}));
+
 jest.mock(
   'react-virtualized-auto-sizer',
   () =>
     ({ children }: any) =>
       children({ height: 600, width: 600 })
 );
-
-jest.useFakeTimers({ legacyFakeTimers: true });
 
 describe('SearchModalInternal', () => {
   const usageCollection = usageCollectionPluginMock.createSetupContract();

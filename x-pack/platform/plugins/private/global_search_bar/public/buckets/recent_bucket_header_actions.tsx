@@ -29,6 +29,8 @@ export const RecentBucketMoreButton = ({ onClick }: RecentBucketMoreButtonProps)
       stopPointerActivation(event);
       onClick();
     }}
+    iconType="chevronSingleRight"
+    iconSide="right"
     size="xs"
   >
     {i18nStrings.recentMore}

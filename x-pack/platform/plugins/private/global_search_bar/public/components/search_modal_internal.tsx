@@ -108,7 +108,9 @@ export const SearchModalInternal = ({
   }, []);
 
   const headerStyles = css`
-    padding: ${SEARCH_MODAL_PADDING_PX}px;
+    padding-block-start: ${SEARCH_MODAL_PADDING_PX}px;
+    padding-inline: ${SEARCH_MODAL_PADDING_PX}px;
+    padding-block-end: 0;
   `;
 
   const bodyStyles = css`
