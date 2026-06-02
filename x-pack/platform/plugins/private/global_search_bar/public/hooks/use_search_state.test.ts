@@ -113,13 +113,14 @@ describe('useSearchState', () => {
     } as any;
 
     const navigateToUrl = jest.fn();
+    const navigateToApp = jest.fn();
     const reportEvent = {
       searchRequest: jest.fn(),
       navigateToApplication: jest.fn(),
       navigateToSavedObject: jest.fn(),
     } as any;
 
-    return { globalSearch, navigateToUrl, reportEvent };
+    return { globalSearch, navigateToUrl, navigateToApp, reportEvent };
   };
 
   const triggerInitialLoadAndRunDebounce = async (result: { current: any }) => {
@@ -142,12 +143,13 @@ describe('useSearchState', () => {
       createResult({ id: 'recent-discover', type: 'application', title: 'Discover' }),
     ]);
 
-    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+    const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
 
     const { result } = renderHook(() =>
       useSearchState({
         globalSearch,
         navigateToUrl,
+        navigateToApp,
         reportEvent,
       })
     );
@@ -173,12 +175,13 @@ describe('useSearchState', () => {
       )
     );
 
-    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+    const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
 
     const { result } = renderHook(() =>
       useSearchState({
         globalSearch,
         navigateToUrl,
+        navigateToApp,
         reportEvent,
       })
     );
@@ -205,6 +208,7 @@ describe('useSearchState', () => {
       useSearchState({
         globalSearch,
         navigateToUrl,
+        navigateToApp,
         reportEvent,
       })
     );
@@ -228,7 +232,7 @@ describe('useSearchState', () => {
   });
 
   it('correctly filters and sorts results by title when the search value is empty', async () => {
-    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+    const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
 
     globalSearch.find.mockReturnValueOnce(
       of(createBatch('Discover', 'Canvas'), createBatch({ id: 'Visualize', type: 'test' }, 'Graph'))
@@ -238,6 +242,7 @@ describe('useSearchState', () => {
       useSearchState({
         globalSearch,
         navigateToUrl,
+        navigateToApp,
         reportEvent,
       })
     );
@@ -249,7 +254,7 @@ describe('useSearchState', () => {
   });
 
   it('search term triggers searchRequest and sorts results by score (descending)', async () => {
-    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+    const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
 
     // first call = initial empty load
     globalSearch.find.mockReturnValueOnce(of(createBatch('Discover')));
@@ -268,6 +273,7 @@ describe('useSearchState', () => {
       useSearchState({
         globalSearch,
         navigateToUrl,
+        navigateToApp,
         reportEvent,
       })
     );
@@ -289,7 +295,7 @@ describe('useSearchState', () => {
   });
 
   it('only displays results from the last search', async () => {
-    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+    const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
 
     const firstSearch$ = new Subject<GlobalSearchBatchedResults>();
 
@@ -310,6 +316,7 @@ describe('useSearchState', () => {
       useSearchState({
         globalSearch,
         navigateToUrl,
+        navigateToApp,
         reportEvent,
       })
     );
@@ -346,7 +353,7 @@ describe('useSearchState', () => {
       createResult({ id: 'visited-dashboard', type: 'dashboard', title: 'Sales Overview' }),
     ]);
 
-    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+    const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
 
     globalSearch.find.mockReturnValueOnce(of(createBatch('Discover')));
 
@@ -358,6 +365,7 @@ describe('useSearchState', () => {
       useSearchState({
         globalSearch,
         navigateToUrl,
+        navigateToApp,
         reportEvent,
       })
     );
@@ -391,12 +399,13 @@ describe('useSearchState', () => {
   });
 
   it('records a visited page when a search result is selected', async () => {
-    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+    const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
 
     const { result } = renderHook(() =>
       useSearchState({
         globalSearch,
         navigateToUrl,
+        navigateToApp,
         reportEvent,
       })
     );
@@ -425,12 +434,13 @@ describe('useSearchState', () => {
   });
 
   it('navigates when EUI passes a clicked option without checked state', async () => {
-    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+    const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
 
     const { result } = renderHook(() =>
       useSearchState({
         globalSearch,
         navigateToUrl,
+        navigateToApp,
         reportEvent,
       })
     );
@@ -452,12 +462,13 @@ describe('useSearchState', () => {
   });
 
   it('navigates on pointer activation via onActiveOptionChange', async () => {
-    const { globalSearch, navigateToUrl, reportEvent } = makeDeps();
+    const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
 
     const { result } = renderHook(() =>
       useSearchState({
         globalSearch,
         navigateToUrl,
+        navigateToApp,
         reportEvent,
       })
     );

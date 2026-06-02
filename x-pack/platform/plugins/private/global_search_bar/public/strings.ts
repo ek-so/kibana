@@ -17,11 +17,17 @@ export const i18nStrings = {
   bucketResults: i18n.translate('xpack.globalSearchBar.searchBar.bucket.results', {
     defaultMessage: 'Results',
   }),
+  bucketActions: i18n.translate('xpack.globalSearchBar.searchBar.bucket.actions', {
+    defaultMessage: 'Actions',
+  }),
   recentMore: i18n.translate('xpack.globalSearchBar.searchBar.recent.more', {
     defaultMessage: 'More',
   }),
   recentShowAllAriaText: i18n.translate('xpack.globalSearchBar.searchBar.recent.showAllAriaText', {
     defaultMessage: 'Show all recent pages',
+  }),
+  actionsShowAllAriaText: i18n.translate('xpack.globalSearchBar.searchBar.actions.showAllAriaText', {
+    defaultMessage: 'Show all actions',
   }),
   recentBackAriaText: i18n.translate('xpack.globalSearchBar.searchBar.recent.backAriaText', {
     defaultMessage: 'Back to search results',

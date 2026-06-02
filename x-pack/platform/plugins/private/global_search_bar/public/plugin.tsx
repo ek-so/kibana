@@ -17,6 +17,13 @@ import type { GlobalSearchBarConfigType } from './types';
 import { EventReporter, eventTypes } from './telemetry';
 import type { SearchProps } from './components/types';
 import { createSearchModalController } from './lib/search_modal_controller';
+import { registerGlobalSearchAction } from './actions/registry';
+import { registerDefaultGlobalSearchActions } from './actions/register_default_actions';
+import type { GlobalSearchAction } from './actions/types';
+
+export interface GlobalSearchBarPluginSetup {
+  registerGlobalSearchAction: (action: GlobalSearchAction) => void;
+}
 
 export interface GlobalSearchBarPluginStartDeps {
   globalSearch: GlobalSearchPluginStart;
@@ -24,7 +31,9 @@ export interface GlobalSearchBarPluginStartDeps {
   usageCollection?: UsageCollectionSetup;
 }
 
-export class GlobalSearchBarPlugin implements Plugin<{}, {}, {}, GlobalSearchBarPluginStartDeps> {
+export class GlobalSearchBarPlugin
+  implements Plugin<GlobalSearchBarPluginSetup, {}, {}, GlobalSearchBarPluginStartDeps>
+{
   private config: GlobalSearchBarConfigType;
 
   constructor(initializerContext: PluginInitializerContext) {
@@ -36,10 +45,13 @@ export class GlobalSearchBarPlugin implements Plugin<{}, {}, {}, GlobalSearchBar
       analytics.registerEventType(eventType);
     });
 
-    return {};
+    return {
+      registerGlobalSearchAction,
+    };
   }
 
   public start(core: CoreStart, startDeps: GlobalSearchBarPluginStartDeps) {
+    registerDefaultGlobalSearchActions();
     const { globalSearch, savedObjectsTagging, usageCollection } = startDeps;
     const { application, http } = core;
     const reportEvent = new EventReporter({ analytics: core.analytics, usageCollection });
@@ -48,6 +60,7 @@ export class GlobalSearchBarPlugin implements Plugin<{}, {}, {}, GlobalSearchBar
     const searchProps: SearchProps = {
       globalSearch: { ...globalSearch, searchCharLimit: this.config.input_max_limit },
       navigateToUrl: application.navigateToUrl,
+      navigateToApp: application.navigateToApp,
       taggingApi: savedObjectsTagging,
       basePathUrl: http.basePath.prepend('/plugins/globalSearchBar/assets/'),
       reportEvent,

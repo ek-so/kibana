@@ -12,11 +12,17 @@ import { EuiIcon, useEuiTheme, type IconType } from '@elastic/eui';
 export const GLOBAL_SEARCH_RESULT_ICON_SIZE_PX = 16;
 export const GLOBAL_SEARCH_RESULT_ICON_WRAPPER_SIZE_PX = 32;
 
+export type GlobalSearchResultPrependIconColor = 'subdued' | 'primary';
+
 export interface GlobalSearchResultPrependIconProps {
   type: IconType;
+  color?: GlobalSearchResultPrependIconColor;
 }
 
-export const GlobalSearchResultPrependIcon = ({ type }: GlobalSearchResultPrependIconProps) => {
+export const GlobalSearchResultPrependIcon = ({
+  type,
+  color = 'subdued',
+}: GlobalSearchResultPrependIconProps) => {
   const { euiTheme } = useEuiTheme();
 
   if (type === 'empty') {
@@ -31,7 +37,9 @@ export const GlobalSearchResultPrependIcon = ({ type }: GlobalSearchResultPrepen
     inline-size: ${GLOBAL_SEARCH_RESULT_ICON_WRAPPER_SIZE_PX}px;
     block-size: ${GLOBAL_SEARCH_RESULT_ICON_WRAPPER_SIZE_PX}px;
     border-radius: 50%;
-    background-color: ${euiTheme.colors.backgroundLightText};
+    background-color: ${color === 'primary'
+      ? euiTheme.colors.backgroundLightPrimary
+      : euiTheme.colors.backgroundLightText};
   `;
 
   const iconStyles = css`
@@ -41,15 +49,18 @@ export const GlobalSearchResultPrependIcon = ({ type }: GlobalSearchResultPrepen
 
   return (
     <span css={wrapperStyles} data-test-subj="globalSearchResultPrependIcon">
-      <EuiIcon type={type} color="subdued" size="s" css={iconStyles} aria-hidden />
+      <EuiIcon type={type} color={color} size="s" css={iconStyles} aria-hidden />
     </span>
   );
 };
 
-export const createGlobalSearchResultPrepend = (type: IconType): React.ReactNode | undefined => {
+export const createGlobalSearchResultPrepend = (
+  type: IconType,
+  color?: GlobalSearchResultPrependIconColor
+): React.ReactNode | undefined => {
   if (type === 'empty') {
     return undefined;
   }
 
-  return <GlobalSearchResultPrependIcon type={type} />;
+  return <GlobalSearchResultPrependIcon type={type} color={color} />;
 };

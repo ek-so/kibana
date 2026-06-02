@@ -11,10 +11,14 @@ export const GLOBAL_SEARCH_MODAL_ROOT_SCREEN_ID = 'root';
 /** All recent pages screen (opened from Recent → More). */
 export const GLOBAL_SEARCH_MODAL_RECENT_SCREEN_ID = 'recent';
 
+/** All actions screen (opened from Actions → More). */
+export const GLOBAL_SEARCH_MODAL_ACTIONS_SCREEN_ID = 'actions';
+
 /** Extend with new screen ids; push via `useSearchModalStack().pushScreen({ id, title }, searchValue)`. */
 export type GlobalSearchModalScreenId =
   | typeof GLOBAL_SEARCH_MODAL_ROOT_SCREEN_ID
   | typeof GLOBAL_SEARCH_MODAL_RECENT_SCREEN_ID
+  | typeof GLOBAL_SEARCH_MODAL_ACTIONS_SCREEN_ID
   | (string & {});
 
 export interface GlobalSearchModalStackSnapshot {
@@ -38,3 +42,8 @@ export const isRecentModalScreen = (
   screenId: GlobalSearchModalScreenId
 ): screenId is typeof GLOBAL_SEARCH_MODAL_RECENT_SCREEN_ID =>
   screenId === GLOBAL_SEARCH_MODAL_RECENT_SCREEN_ID;
+
+export const isActionsModalScreen = (
+  screenId: GlobalSearchModalScreenId
+): screenId is typeof GLOBAL_SEARCH_MODAL_ACTIONS_SCREEN_ID =>
+  screenId === GLOBAL_SEARCH_MODAL_ACTIONS_SCREEN_ID;

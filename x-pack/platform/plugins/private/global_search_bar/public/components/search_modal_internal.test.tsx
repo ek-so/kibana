@@ -73,6 +73,7 @@ describe('SearchModalInternal', () => {
         <SearchModalInternal
           globalSearch={{ ...searchService, searchCharLimit: 1000 }}
           navigateToUrl={applications.navigateToUrl}
+          navigateToApp={applications.navigateToApp}
           basePathUrl={basePathUrl}
           reportEvent={eventReporter}
           onClose={jest.fn()}
@@ -94,6 +95,7 @@ describe('SearchModalInternal', () => {
         <SearchModalInternal
           globalSearch={{ ...searchService, searchCharLimit: 1000 }}
           navigateToUrl={applications.navigateToUrl}
+          navigateToApp={applications.navigateToApp}
           basePathUrl={basePathUrl}
           reportEvent={eventReporter}
           onClose={jest.fn()}

@@ -16,10 +16,14 @@ export const GLOBAL_SEARCH_BUCKET_RECENT = 'recent' as const;
 /** Saved objects and other provider hits (non-application). */
 export const GLOBAL_SEARCH_BUCKET_RESULTS = 'results' as const;
 
+/** Executable commands registered for the search modal. */
+export const GLOBAL_SEARCH_BUCKET_ACTIONS = 'actions' as const;
+
 export type GlobalSearchBucketId =
   | typeof GLOBAL_SEARCH_BUCKET_NAVIGATE
   | typeof GLOBAL_SEARCH_BUCKET_RECENT
-  | typeof GLOBAL_SEARCH_BUCKET_RESULTS;
+  | typeof GLOBAL_SEARCH_BUCKET_RESULTS
+  | typeof GLOBAL_SEARCH_BUCKET_ACTIONS;
 
 export interface GlobalSearchBucket {
   id: GlobalSearchBucketId;

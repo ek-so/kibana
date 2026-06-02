@@ -23,11 +23,14 @@ import type {
   GlobalSearchResult,
 } from '@kbn/global-search-plugin/public';
 import {
+  GLOBAL_SEARCH_BUCKET_ACTIONS,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   GLOBAL_SEARCH_BUCKET_RESULTS,
   organizeGlobalSearchResults,
 } from '@kbn/global-search-plugin/public';
+import { getGlobalSearchActionById, getGlobalSearchActions } from '../actions/registry';
+import { GLOBAL_SEARCH_ACTION_OPTION_TYPE } from '../actions/types';
 import useDebounce from 'react-use/lib/useDebounce';
 import useObservable from 'react-use/lib/useObservable';
 import { apm } from '@elastic/apm-rum';
@@ -56,6 +59,7 @@ const UNKNOWN_TAG_ID = '__unknown__';
 
 const bucketTitles: Record<GlobalSearchBucketId, string> = {
   [GLOBAL_SEARCH_BUCKET_RECENT]: i18nStrings.bucketRecent,
+  [GLOBAL_SEARCH_BUCKET_ACTIONS]: i18nStrings.bucketActions,
   [GLOBAL_SEARCH_BUCKET_NAVIGATE]: i18nStrings.bucketNavigate,
   [GLOBAL_SEARCH_BUCKET_RESULTS]: i18nStrings.bucketResults,
 };
@@ -65,8 +69,12 @@ interface UseSearchStateOptions extends Omit<SearchProps, 'basePathUrl'> {
   onResultSelect?: () => void;
   /** When set (e.g. search modal), overrides default in-popover "show all recent" behavior. */
   onShowAllRecent?: () => void;
+  /** When set (e.g. search modal), overrides default in-popover "show all actions" behavior. */
+  onShowAllActions?: () => void;
   /** Modal nested Recent screen: show all recent items only while the query is empty. */
   nestedRecentContext?: boolean;
+  /** Modal nested Actions screen: show all actions only while the query is empty. */
+  nestedActionsContext?: boolean;
   /** Renders each bucket as its own section in the search modal. */
   useModalBucketLayout?: boolean;
 }
@@ -92,6 +100,7 @@ export interface SearchStateResult {
   selectableListProps: NonNullable<EuiSelectableProps['listProps']>;
   resultsView: GlobalSearchResultsView;
   showAllRecent: () => void;
+  showAllActions: () => void;
   modalBucketSections: SearchModalBucketSection[];
   suggestionOptions: EuiSelectableTemplateSitewideOption[];
 }
@@ -117,10 +126,13 @@ export const useSearchState = ({
   globalSearch,
   taggingApi,
   navigateToUrl,
+  navigateToApp,
   reportEvent,
   onResultSelect,
   onShowAllRecent: onShowAllRecentOverride,
+  onShowAllActions: onShowAllActionsOverride,
   nestedRecentContext = false,
+  nestedActionsContext = false,
   useModalBucketLayout = false,
   getNavigation$,
   prependBasePath = (path) => path,
@@ -168,12 +180,19 @@ export const useSearchState = ({
       return searchValue.trim() === '' ? 'recent' : 'main';
     }
 
-    if (resultsView === 'recent' && searchValue.trim() !== '') {
+    if (nestedActionsContext) {
+      return searchValue.trim() === '' ? 'actions' : 'main';
+    }
+
+    if (
+      (resultsView === 'recent' || resultsView === 'actions') &&
+      searchValue.trim() !== ''
+    ) {
       return 'main';
     }
 
     return resultsView;
-  }, [nestedRecentContext, resultsView, searchValue]);
+  }, [nestedActionsContext, nestedRecentContext, resultsView, searchValue]);
 
   const activeResultsViewRef = useRef(activeResultsView);
   activeResultsViewRef.current = activeResultsView;
@@ -181,6 +200,11 @@ export const useSearchState = ({
   const showAllRecentRef = useRef<() => void>(() => {});
   const stableShowAllRecent = useCallback(() => {
     showAllRecentRef.current();
+  }, []);
+
+  const showAllActionsRef = useRef<() => void>(() => {});
+  const stableShowAllActions = useCallback(() => {
+    showAllActionsRef.current();
   }, []);
 
   const searchSubscription = useRef<Subscription | null>(null);
@@ -244,7 +268,7 @@ export const useSearchState = ({
       const buckets = organizeGlobalSearchResults({
         results,
         recent,
-        term: view === 'recent' ? '' : term,
+        term: view === 'recent' || view === 'actions' ? '' : term,
       });
 
       if (useModalBucketLayout) {
@@ -258,6 +282,9 @@ export const useSearchState = ({
             getNavigationParent,
             view,
             onShowAllRecent: stableShowAllRecent,
+            onShowAllActions: stableShowAllActions,
+            actions: getGlobalSearchActions(),
+            term: view === 'recent' || view === 'actions' ? '' : term,
           })
         );
         setOptions([]);
@@ -276,10 +303,13 @@ export const useSearchState = ({
           getNavigationParent,
           view,
           onShowAllRecent: stableShowAllRecent,
+          onShowAllActions: stableShowAllActions,
+          actions: getGlobalSearchActions(),
+          term: view === 'recent' || view === 'actions' ? '' : term,
         })
       );
     },
-    [taggingApi, stableShowAllRecent, getNavigationParent, useModalBucketLayout]
+    [taggingApi, stableShowAllRecent, stableShowAllActions, getNavigationParent, useModalBucketLayout]
   );
 
   useLayoutEffect(() => {
@@ -312,6 +342,37 @@ export const useSearchState = ({
       updateOptions(latestResultsRef.current, [], [], '', 'recent');
     };
   }, [onShowAllRecentOverride, updateOptions]);
+
+  useLayoutEffect(() => {
+    showAllActionsRef.current = () => {
+      if (onShowAllActionsOverride) {
+        searchSubscription.current?.unsubscribe();
+        searchSubscription.current = null;
+
+        onShowAllActionsOverride();
+
+        const params = lastUpdateParamsRef.current;
+        if (params) {
+          updateOptions(params.results, params.suggestions, params.searchTagIds, '', 'actions');
+        } else {
+          updateOptions(latestResultsRef.current, [], [], '', 'actions');
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      setResultsView('actions');
+      setIsLoading(false);
+
+      const params = lastUpdateParamsRef.current;
+      if (params) {
+        updateOptions(params.results, params.suggestions, params.searchTagIds, '', 'actions');
+        return;
+      }
+
+      updateOptions(latestResultsRef.current, [], [], '', 'actions');
+    };
+  }, [onShowAllActionsOverride, updateOptions]);
 
   useEffect(() => {
     const params = lastUpdateParamsRef.current;
@@ -355,7 +416,11 @@ export const useSearchState = ({
   useDebounce(
     () => {
       if (initialLoad) {
-        if (activeResultsViewRef.current === 'recent' && searchValue.trim() === '') {
+        if (
+          (activeResultsViewRef.current === 'recent' ||
+            activeResultsViewRef.current === 'actions') &&
+          searchValue.trim() === ''
+        ) {
           setIsLoading(false);
           return;
         }
@@ -490,6 +555,14 @@ export const useSearchState = ({
       // @ts-ignore - ts error is "union type is too complex to express"
       const { url, type, suggestion } = selected;
 
+      if (type === GLOBAL_SEARCH_ACTION_OPTION_TYPE) {
+        const action = getGlobalSearchActionById(String(selected.key));
+        action?.execute({ navigateToUrl, navigateToApp });
+        onResultSelectRef.current?.();
+        setResultsView('main');
+        return;
+      }
+
       // if the type is a suggestion, we change the query on the input and trigger a new search
       // by setting the searchValue (only setting the field value does not trigger a search)
       if (type === '__suggestion__') {
@@ -555,7 +628,7 @@ export const useSearchState = ({
       onResultSelectRef.current?.();
       setResultsView('main');
     },
-    [reportEvent, navigateToUrl, searchValue]
+    [reportEvent, navigateToUrl, navigateToApp, searchValue]
   );
 
   const selectableListProps = useMemo((): NonNullable<EuiSelectableProps['listProps']> => {
@@ -589,6 +662,12 @@ export const useSearchState = ({
           event.preventDefault();
           event.stopPropagation();
           showAllRecentRef.current();
+          return;
+        }
+        if (target?.closest('[data-test-subj="global-search-actions-more"]')) {
+          event.preventDefault();
+          event.stopPropagation();
+          showAllActionsRef.current();
           return;
         }
         pointerListHandler(event);
@@ -661,6 +740,7 @@ export const useSearchState = ({
     triggerInitialLoad,
     resultsView,
     showAllRecent: stableShowAllRecent,
+    showAllActions: stableShowAllActions,
     modalBucketSections,
     suggestionOptions,
   };

@@ -5,34 +5,18 @@
  * 2.0.
  */
 
-import { EuiButtonEmpty, EuiButtonIcon } from '@elastic/eui';
 import React from 'react';
 import { i18nStrings } from '../strings';
-
-const stopPointerActivation = (event: React.MouseEvent) => {
-  event.stopPropagation();
-};
+import { GlobalSearchBucketMoreButton } from './bucket_more_button';
 
 export interface RecentBucketMoreButtonProps {
   onClick: () => void;
 }
 
 export const RecentBucketMoreButton = ({ onClick }: RecentBucketMoreButtonProps) => (
-  <EuiButtonEmpty
-    aria-label={i18nStrings.recentShowAllAriaText}
-    className="globalSearchBucketHeader__more"
-    color="primary"
+  <GlobalSearchBucketMoreButton
+    onClick={onClick}
+    ariaLabel={i18nStrings.recentShowAllAriaText}
     data-test-subj="global-search-recent-more"
-    type="button"
-    onMouseDown={stopPointerActivation}
-    onClick={(event) => {
-      stopPointerActivation(event);
-      onClick();
-    }}
-    iconType="chevronSingleRight"
-    iconSide="right"
-    size="xs"
-  >
-    {i18nStrings.recentMore}
-  </EuiButtonEmpty>
+  />
 );

@@ -9,6 +9,7 @@ import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
 import type { ReactNode } from 'react';
 import React from 'react';
 import {
+  GLOBAL_SEARCH_BUCKET_ACTIONS,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   type GlobalSearchBucket,
@@ -21,6 +22,8 @@ import { getRecentPages, RECENT_ITEMS_MAIN_LIMIT } from '../recent/recent_store'
 import { RecentBucketMoreButton } from './recent_bucket_header_actions';
 import type { GlobalSearchResultsView } from './build_selectable_options';
 import { NAVIGATE_ITEMS_MAIN_LIMIT } from './build_selectable_options';
+import type { GlobalSearchAction } from '../actions/types';
+import { insertActionsModalSections } from './insert_actions_bucket_sections';
 
 export interface SearchModalBucketSection {
   id: GlobalSearchBucketId;
@@ -53,6 +56,9 @@ export const buildModalBucketSections = ({
   getNavigationParent,
   view = 'main',
   onShowAllRecent,
+  onShowAllActions,
+  actions = [],
+  term = '',
 }: {
   buckets: GlobalSearchBucket[];
   bucketTitles: Record<GlobalSearchBucketId, string>;
@@ -61,7 +67,21 @@ export const buildModalBucketSections = ({
   getNavigationParent?: (url: string) => NavigationParentContext;
   view?: GlobalSearchResultsView;
   onShowAllRecent?: () => void;
+  onShowAllActions?: () => void;
+  actions?: GlobalSearchAction[];
+  term?: string;
 }): SearchModalBucketSection[] => {
+  if (view === 'actions') {
+    return insertActionsModalSections({
+      sections: [],
+      actions,
+      actionsTitle: bucketTitles[GLOBAL_SEARCH_BUCKET_ACTIONS],
+      term: '',
+      view,
+      onShowAllActions,
+    });
+  }
+
   if (view === 'recent') {
     const allRecentItems = getRecentPages();
 
@@ -119,5 +139,12 @@ export const buildModalBucketSections = ({
     });
   }
 
-  return sections;
+  return insertActionsModalSections({
+    sections,
+    actions,
+    actionsTitle: bucketTitles[GLOBAL_SEARCH_BUCKET_ACTIONS],
+    term,
+    view,
+    onShowAllActions,
+  });
 };

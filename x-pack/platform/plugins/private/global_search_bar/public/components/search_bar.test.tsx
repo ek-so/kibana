@@ -52,6 +52,7 @@ describe('SearchBar (UI wiring)', () => {
         <SearchBar
           globalSearch={{ ...searchService, searchCharLimit: 1000 }}
           navigateToUrl={applications.navigateToUrl}
+          navigateToApp={applications.navigateToApp}
           basePathUrl={basePathUrl}
           chromeStyle$={of<ChromeStyle>('classic')}
           reportEvent={eventReporter}
@@ -75,6 +76,7 @@ describe('SearchBar (UI wiring)', () => {
         <SearchBar
           globalSearch={{ ...searchService, searchCharLimit: 1000 }}
           navigateToUrl={applications.navigateToUrl}
+          navigateToApp={applications.navigateToApp}
           basePathUrl={basePathUrl}
           chromeStyle$={of<ChromeStyle>('project')}
           reportEvent={eventReporter}
@@ -99,6 +101,7 @@ describe('SearchBar (UI wiring)', () => {
         <SearchBar
           globalSearch={{ ...searchService, searchCharLimit: 1000 }}
           navigateToUrl={applications.navigateToUrl}
+          navigateToApp={applications.navigateToApp}
           basePathUrl={basePathUrl}
           chromeStyle$={of<ChromeStyle>('project')}
           reportEvent={eventReporter}

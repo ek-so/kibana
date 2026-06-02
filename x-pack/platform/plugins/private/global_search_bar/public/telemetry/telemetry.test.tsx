@@ -123,6 +123,7 @@ describe('SearchBar', () => {
           <SearchBar
             globalSearch={{ ...searchService, searchCharLimit }}
             navigateToUrl={applications.navigateToUrl}
+            navigateToApp={applications.navigateToApp}
             basePathUrl={basePathUrl}
             chromeStyle$={chromeStyle$}
             reportEvent={eventReporter}
@@ -145,6 +146,7 @@ describe('SearchBar', () => {
           <SearchBar
             globalSearch={{ ...searchService, searchCharLimit }}
             navigateToUrl={applications.navigateToUrl}
+            navigateToApp={applications.navigateToApp}
             basePathUrl={basePathUrl}
             chromeStyle$={chromeStyle$}
             reportEvent={eventReporter}
@@ -172,6 +174,7 @@ describe('SearchBar', () => {
           <SearchBar
             globalSearch={{ ...searchService, searchCharLimit }}
             navigateToUrl={applications.navigateToUrl}
+            navigateToApp={applications.navigateToApp}
             basePathUrl={basePathUrl}
             chromeStyle$={chromeStyle$}
             reportEvent={eventReporter}
@@ -207,6 +210,7 @@ describe('SearchBar', () => {
           <SearchBar
             globalSearch={{ ...searchService, searchCharLimit }}
             navigateToUrl={applications.navigateToUrl}
+            navigateToApp={applications.navigateToApp}
             basePathUrl={basePathUrl}
             chromeStyle$={chromeStyle$}
             reportEvent={eventReporter}
@@ -243,6 +247,7 @@ describe('SearchBar', () => {
           <SearchBar
             globalSearch={{ ...searchService, searchCharLimit }}
             navigateToUrl={applications.navigateToUrl}
+            navigateToApp={applications.navigateToApp}
             basePathUrl={basePathUrl}
             chromeStyle$={chromeStyle$}
             reportEvent={eventReporter}
@@ -282,6 +287,8 @@ describe('SearchBar', () => {
             <SearchBar
               globalSearch={{ ...searchService, searchCharLimit }}
               navigateToUrl={applications.navigateToUrl}
+              navigateToApp={applications.navigateToApp}
+            navigateToApp={applications.navigateToApp}
               basePathUrl={basePathUrl}
               chromeStyle$={chromeStyle$}
               reportEvent={eventReporter}

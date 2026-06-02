@@ -27,7 +27,9 @@ import { SEARCH_MODAL_PADDING_PX, SEARCH_MODAL_SELECTOR_PREFIX } from './types';
 import { CharLimitExceededMessage } from './char_limit_exceeded_message';
 import { useSearchModalStack } from '../hooks/use_search_modal_stack';
 import {
+  GLOBAL_SEARCH_MODAL_ACTIONS_SCREEN_ID,
   GLOBAL_SEARCH_MODAL_RECENT_SCREEN_ID,
+  isActionsModalScreen,
   isRecentModalScreen,
 } from '../search_modal/search_modal_stack';
 import { SearchNestedBackPrepend } from './search_nested_back_prepend';
@@ -39,6 +41,7 @@ export const SearchModalInternal = ({
   globalSearch,
   taggingApi,
   navigateToUrl,
+  navigateToApp,
   reportEvent,
   basePathUrl,
   onClose,
@@ -52,6 +55,7 @@ export const SearchModalInternal = ({
   const searchValueRef = useRef('');
   const setSearchValueRef = useRef<(value: string) => void>(() => {});
   const nestedRecentContext = isNested && isRecentModalScreen(currentScreen.id);
+  const nestedActionsContext = isNested && isActionsModalScreen(currentScreen.id);
 
   const {
     searchValue,
@@ -69,15 +73,24 @@ export const SearchModalInternal = ({
     globalSearch,
     taggingApi,
     navigateToUrl,
+    navigateToApp,
     reportEvent,
     getNavigation$,
     prependBasePath,
     onResultSelect: onClose,
     nestedRecentContext,
+    nestedActionsContext,
     useModalBucketLayout: true,
     onShowAllRecent: () => {
       pushScreen(
         { id: GLOBAL_SEARCH_MODAL_RECENT_SCREEN_ID, title: i18nStrings.bucketRecent },
+        searchValueRef.current
+      );
+      setSearchValueRef.current('');
+    },
+    onShowAllActions: () => {
+      pushScreen(
+        { id: GLOBAL_SEARCH_MODAL_ACTIONS_SCREEN_ID, title: i18nStrings.bucketActions },
         searchValueRef.current
       );
       setSearchValueRef.current('');
@@ -87,7 +100,8 @@ export const SearchModalInternal = ({
   searchValueRef.current = searchValue;
   setSearchValueRef.current = setSearchValue;
 
-  const showRecentListInNested = nestedRecentContext && searchValue.trim() === '';
+  const showNestedBucketInInput =
+    (nestedRecentContext || nestedActionsContext) && searchValue.trim() === '';
 
   const handleNestedBack = useCallback(() => {
     const parentSnapshot = popScreen();
@@ -186,7 +200,7 @@ export const SearchModalInternal = ({
           data-test-subj={`${SEARCH_MODAL_SELECTOR_PREFIX}Input`}
           aria-label={i18nStrings.modalPlaceholderText}
           placeholder={
-            showRecentListInNested ? currentScreen.title : i18nStrings.modalPlaceholderText
+            showNestedBucketInInput ? currentScreen.title : i18nStrings.modalPlaceholderText
           }
           isInvalid={searchCharLimitExceeded}
         />

@@ -7,6 +7,7 @@
 
 import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
 import {
+  GLOBAL_SEARCH_BUCKET_ACTIONS,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   type GlobalSearchBucket,
@@ -18,8 +19,10 @@ import type { SearchSuggestion } from '../suggestions';
 import { resultToOption, suggestionToOption } from '../lib';
 import { getRecentPages, RECENT_ITEMS_MAIN_LIMIT } from '../recent/recent_store';
 import { RecentBucketMoreButton } from './recent_bucket_header_actions';
+import type { GlobalSearchAction } from '../actions/types';
+import { insertActionsSelectableOptions } from './insert_actions_bucket_sections';
 
-export type GlobalSearchResultsView = 'main' | 'recent';
+export type GlobalSearchResultsView = 'main' | 'recent' | 'actions';
 
 /** Maximum navigate items shown in the main search popover. */
 export const NAVIGATE_ITEMS_MAIN_LIMIT = 5;
@@ -54,6 +57,9 @@ export const buildSelectableOptionsFromBuckets = ({
   getNavigationParent,
   view = 'main',
   onShowAllRecent,
+  onShowAllActions,
+  actions = [],
+  term = '',
 }: {
   buckets: GlobalSearchBucket[];
   bucketTitles: Record<GlobalSearchBucketId, string>;
@@ -63,7 +69,21 @@ export const buildSelectableOptionsFromBuckets = ({
   getNavigationParent?: (url: string) => NavigationParentContext;
   view?: GlobalSearchResultsView;
   onShowAllRecent?: () => void;
+  onShowAllActions?: () => void;
+  actions?: GlobalSearchAction[];
+  term?: string;
 }): EuiSelectableTemplateSitewideOption[] => {
+  if (view === 'actions') {
+    return insertActionsSelectableOptions({
+      options: [],
+      actions,
+      actionsTitle: bucketTitles[GLOBAL_SEARCH_BUCKET_ACTIONS],
+      term: '',
+      view,
+      onShowAllActions,
+    });
+  }
+
   if (view === 'recent') {
     const allRecentItems = getRecentPages();
 
@@ -121,5 +141,12 @@ export const buildSelectableOptionsFromBuckets = ({
     options.push(...buildResultOptions({ items: visibleItems, searchTagIds, getTagList, getNavigationParent }));
   }
 
-  return options;
+  return insertActionsSelectableOptions({
+    options,
+    actions,
+    actionsTitle: bucketTitles[GLOBAL_SEARCH_BUCKET_ACTIONS],
+    term,
+    view,
+    onShowAllActions,
+  });
 };

@@ -39,6 +39,7 @@ export interface ProjectNavigationState {
 export interface SearchProps {
   globalSearch: GlobalSearchPluginStart & { searchCharLimit: number };
   navigateToUrl: ApplicationStart['navigateToUrl'];
+  navigateToApp: ApplicationStart['navigateToApp'];
   reportEvent: EventReporter;
   taggingApi?: SavedObjectTaggingPluginStart;
   basePathUrl: string;

@@ -30,6 +30,12 @@ describe('GlobalSearchResultPrependIcon', () => {
     });
     expect(container.querySelector('[data-euiicon-type="gear"]')).toBeTruthy();
   });
+
+  it('renders with primary icon color for action prepends', () => {
+    const { container } = render(<GlobalSearchResultPrependIcon type="plus" color="primary" />);
+
+    expect(container.querySelector('[data-euiicon-type="plus"][color="primary"]')).toBeTruthy();
+  });
 });
 
 describe('createGlobalSearchResultPrepend', () => {

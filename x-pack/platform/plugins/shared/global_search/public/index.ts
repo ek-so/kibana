@@ -28,11 +28,18 @@ export type {
 } from '../common/types';
 export {
   organizeGlobalSearchResults,
+  GLOBAL_SEARCH_BUCKET_ACTIONS,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   GLOBAL_SEARCH_BUCKET_RESULTS,
 } from '../common/buckets';
 export type { GlobalSearchBucket, GlobalSearchBucketId } from '../common/buckets';
+export {
+  GLOBAL_SEARCH_ITEM_KIND_ACTION,
+  GLOBAL_SEARCH_ITEM_KIND_META_KEY,
+  GLOBAL_SEARCH_ITEM_KIND_PAGE,
+} from '../common/item_kinds';
+export type { GlobalSearchItemKind } from '../common/item_kinds';
 export type {
   GlobalSearchPluginSetup,
   GlobalSearchPluginStart,

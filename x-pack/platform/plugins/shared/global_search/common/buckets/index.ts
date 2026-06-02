@@ -8,6 +8,7 @@
 export { organizeGlobalSearchResults } from './organize_results';
 export type { GlobalSearchBucket, GlobalSearchBucketId, OrganizeGlobalSearchResultsParams } from './types';
 export {
+  GLOBAL_SEARCH_BUCKET_ACTIONS,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   GLOBAL_SEARCH_BUCKET_RESULTS,

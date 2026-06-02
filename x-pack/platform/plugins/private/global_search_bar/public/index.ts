@@ -8,5 +8,13 @@
 import type { PluginInitializer } from '@kbn/core/public';
 import { GlobalSearchBarPlugin } from './plugin';
 
-export const plugin: PluginInitializer<{}, {}, {}, {}> = (initializerContext) =>
-  new GlobalSearchBarPlugin(initializerContext);
+export const plugin: PluginInitializer<
+  import('./plugin').GlobalSearchBarPluginSetup,
+  {},
+  {},
+  {}
+> = (initializerContext) => new GlobalSearchBarPlugin(initializerContext);
+
+export type { GlobalSearchBarPluginSetup } from './plugin';
+export type { GlobalSearchAction, GlobalSearchActionExecuteContext } from './actions/types';
+export { registerGlobalSearchAction } from './actions/registry';
