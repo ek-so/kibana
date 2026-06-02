@@ -17,12 +17,16 @@ export const GLOBAL_SEARCH_MODAL_ACTIONS_SCREEN_ID = 'actions';
 /** All favorite items screen (opened from Favorite → More). */
 export const GLOBAL_SEARCH_MODAL_FAVORITES_SCREEN_ID = 'favorites';
 
+/** Search results configuration screen (opened from the main modal configure control). */
+export const GLOBAL_SEARCH_MODAL_CONFIGURATION_SCREEN_ID = 'configuration';
+
 /** Extend with new screen ids; push via `useSearchModalStack().pushScreen({ id, title }, searchValue)`. */
 export type GlobalSearchModalScreenId =
   | typeof GLOBAL_SEARCH_MODAL_ROOT_SCREEN_ID
   | typeof GLOBAL_SEARCH_MODAL_RECENT_SCREEN_ID
   | typeof GLOBAL_SEARCH_MODAL_ACTIONS_SCREEN_ID
   | typeof GLOBAL_SEARCH_MODAL_FAVORITES_SCREEN_ID
+  | typeof GLOBAL_SEARCH_MODAL_CONFIGURATION_SCREEN_ID
   | (string & {});
 
 export interface GlobalSearchModalStackSnapshot {
@@ -56,3 +60,8 @@ export const isFavoritesModalScreen = (
   screenId: GlobalSearchModalScreenId
 ): screenId is typeof GLOBAL_SEARCH_MODAL_FAVORITES_SCREEN_ID =>
   screenId === GLOBAL_SEARCH_MODAL_FAVORITES_SCREEN_ID;
+
+export const isConfigurationModalScreen = (
+  screenId: GlobalSearchModalScreenId
+): screenId is typeof GLOBAL_SEARCH_MODAL_CONFIGURATION_SCREEN_ID =>
+  screenId === GLOBAL_SEARCH_MODAL_CONFIGURATION_SCREEN_ID;
