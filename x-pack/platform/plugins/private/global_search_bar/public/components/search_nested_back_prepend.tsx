@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { EuiButtonEmpty, EuiButtonIcon } from '@elastic/eui';
+import { EuiFormPrepend } from '@elastic/eui';
 import React from 'react';
 import { i18nStrings } from '../strings';
 
@@ -13,24 +13,21 @@ const stopPointerActivation = (event: React.MouseEvent) => {
   event.stopPropagation();
 };
 
-export interface RecentBucketMoreButtonProps {
+export interface SearchNestedBackPrependProps {
   onClick: () => void;
 }
 
-export const RecentBucketMoreButton = ({ onClick }: RecentBucketMoreButtonProps) => (
-  <EuiButtonEmpty
-    aria-label={i18nStrings.recentShowAllAriaText}
-    className="globalSearchBucketHeader__more"
-    color="primary"
-    data-test-subj="global-search-recent-more"
+export const SearchNestedBackPrepend = ({ onClick }: SearchNestedBackPrependProps) => (
+  <EuiFormPrepend
+    aria-label={i18nStrings.nestedBackAriaText}
+    className="globalSearchNestedBackPrepend"
+    data-test-subj="global-search-nested-back"
+    iconLeft="arrowLeft"
     type="button"
     onMouseDown={stopPointerActivation}
     onClick={(event) => {
       stopPointerActivation(event);
       onClick();
     }}
-    size="xs"
-  >
-    {i18nStrings.recentMore}
-  </EuiButtonEmpty>
+  />
 );

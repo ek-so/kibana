@@ -6,7 +6,6 @@
  */
 
 import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
-import React from 'react';
 import {
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
@@ -17,8 +16,8 @@ import type { NavigationParentContext } from '@kbn/core-chrome-browser';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import type { SearchSuggestion } from '../suggestions';
 import { resultToOption, suggestionToOption } from '../lib';
-import { RECENT_ITEMS_MAIN_LIMIT } from '../recent/recent_store';
-import { RecentBucketBackButton, RecentBucketMoreButton } from './recent_bucket_header_actions';
+import { getRecentPages, RECENT_ITEMS_MAIN_LIMIT } from '../recent/recent_store';
+import { RecentBucketMoreButton } from './recent_bucket_header_actions';
 
 export type GlobalSearchResultsView = 'main' | 'recent';
 
@@ -55,7 +54,6 @@ export const buildSelectableOptionsFromBuckets = ({
   getNavigationParent,
   view = 'main',
   onShowAllRecent,
-  onBackToMain,
 }: {
   buckets: GlobalSearchBucket[];
   bucketTitles: Record<GlobalSearchBucketId, string>;
@@ -65,13 +63,11 @@ export const buildSelectableOptionsFromBuckets = ({
   getNavigationParent?: (url: string) => NavigationParentContext;
   view?: GlobalSearchResultsView;
   onShowAllRecent?: () => void;
-  onBackToMain?: () => void;
 }): EuiSelectableTemplateSitewideOption[] => {
-  const recentBucket = buckets.find((bucket) => bucket.id === GLOBAL_SEARCH_BUCKET_RECENT);
-  const recentItems = recentBucket?.items ?? [];
-
   if (view === 'recent') {
-    if (recentItems.length === 0) {
+    const allRecentItems = getRecentPages();
+
+    if (allRecentItems.length === 0) {
       return [];
     }
 
@@ -79,10 +75,15 @@ export const buildSelectableOptionsFromBuckets = ({
       {
         label: bucketTitles[GLOBAL_SEARCH_BUCKET_RECENT],
         isGroupLabel: true,
-        prepend: onBackToMain ? <RecentBucketBackButton onClick={onBackToMain} /> : undefined,
+        className: 'globalSearchBucketHeader',
         'data-test-subj': `global-search-bucket-${GLOBAL_SEARCH_BUCKET_RECENT}-all`,
       },
-      ...buildResultOptions({ items: recentItems, searchTagIds, getTagList, getNavigationParent }),
+      ...buildResultOptions({
+        items: allRecentItems,
+        searchTagIds,
+        getTagList,
+        getNavigationParent,
+      }),
     ];
   }
 
@@ -110,7 +111,9 @@ export const buildSelectableOptionsFromBuckets = ({
     options.push({
       label: bucketTitles[bucket.id],
       isGroupLabel: true,
-      className: hasMoreRecentItems ? 'globalSearchBucketHeader--withMore' : undefined,
+      className: `globalSearchBucketHeader${
+        hasMoreRecentItems ? ' globalSearchBucketHeader--withMore' : ''
+      }`,
       append: hasMoreRecentItems ? (
         <RecentBucketMoreButton onClick={onShowAllRecent} />
       ) : undefined,

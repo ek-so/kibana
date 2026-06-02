@@ -11,6 +11,12 @@ import {
 } from '@kbn/global-search-plugin/public';
 import type { GlobalSearchResult } from '@kbn/global-search-plugin/public';
 import { buildSelectableOptionsFromBuckets } from './build_selectable_options';
+import { getRecentPages } from '../recent/recent_store';
+
+jest.mock('../recent/recent_store', () => ({
+  getRecentPages: jest.fn(),
+  RECENT_ITEMS_MAIN_LIMIT: 3,
+}));
 
 jest.mock('../lib', () => ({
   resultToOption: jest.fn((result: GlobalSearchResult) => ({
@@ -41,7 +47,13 @@ const bucketTitles = {
   results: 'Results',
 };
 
+const mockGetRecentPages = getRecentPages as jest.MockedFunction<typeof getRecentPages>;
+
 describe('buildSelectableOptionsFromBuckets', () => {
+  beforeEach(() => {
+    mockGetRecentPages.mockReset();
+  });
+
   it('limits recent items to three in the main view and adds a More action', () => {
     const recentItems = Array.from({ length: 7 }, (_, index) => createResult(`recent-${index}`));
     const onShowAllRecent = jest.fn();
@@ -85,22 +97,24 @@ describe('buildSelectableOptionsFromBuckets', () => {
     ).toBeUndefined();
   });
 
-  it('shows all recent items in the recent view with a back action', () => {
+  it('shows all recent items from the recent store in the recent view', () => {
     const recentItems = Array.from({ length: 7 }, (_, index) => createResult(`recent-${index}`));
-    const onBackToMain = jest.fn();
+    mockGetRecentPages.mockReturnValue(recentItems);
 
     const options = buildSelectableOptionsFromBuckets({
-      buckets: [{ id: GLOBAL_SEARCH_BUCKET_RECENT, items: recentItems }],
+      buckets: [{ id: GLOBAL_SEARCH_BUCKET_RECENT, items: recentItems.slice(0, 3) }],
       bucketTitles,
       suggestions: [{ suggestion: 'type: dashboard' }],
       searchTagIds: [],
       view: 'recent',
-      onBackToMain,
     });
 
     expect(options.some((option) => option.type === '__suggestion__')).toBe(false);
-    expect(options.some((option) => option.isGroupLabel && option.prepend)).toBe(true);
+    expect(
+      options.find((option) => option.isGroupLabel && option.label === 'Recent')?.append
+    ).toBeUndefined();
     expect(getSelectableLabels(options)).toHaveLength(7);
+    expect(mockGetRecentPages).toHaveBeenCalled();
   });
 });
 

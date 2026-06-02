@@ -26,8 +26,14 @@ export const i18nStrings = {
   recentBackAriaText: i18n.translate('xpack.globalSearchBar.searchBar.recent.backAriaText', {
     defaultMessage: 'Back to search results',
   }),
+  nestedBackAriaText: i18n.translate('xpack.globalSearchBar.searchBar.nested.backAriaText', {
+    defaultMessage: 'Back to previous search',
+  }),
   placeholderText: i18n.translate('xpack.globalSearchBar.searchBar.placeholder', {
     defaultMessage: 'Find apps, content, and more.',
+  }),
+  modalPlaceholderText: i18n.translate('xpack.globalSearchBar.searchModal.placeholder', {
+    defaultMessage: 'Search for apps and commands...',
   }),
   popoverButton: i18n.translate('xpack.globalSearchBar.searchBar.mobileSearchButtonAriaLabel', {
     defaultMessage: 'Site-wide search',

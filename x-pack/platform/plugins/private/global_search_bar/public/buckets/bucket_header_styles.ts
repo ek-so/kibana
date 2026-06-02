@@ -10,12 +10,13 @@ import type { UseEuiTheme } from '@elastic/eui';
 import { logicalCSS } from '@elastic/eui';
 
 export const globalSearchBucketHeaderStyles = ({ euiTheme }: UseEuiTheme) => css`
-  .euiSelectableList__groupLabel {
+  .globalSearchBucketHeader.euiSelectableListItem {
     display: flex;
     align-items: center;
     gap: ${euiTheme.size.xs};
     inline-size: 100%;
-    ${logicalCSS('padding-block', euiTheme.size.xs)}
+    ${logicalCSS('padding-vertical', euiTheme.size.xs)}
+    ${logicalCSS('padding-left', euiTheme.size.s)}
     min-block-size: auto;
 
     &::before {
@@ -23,7 +24,7 @@ export const globalSearchBucketHeaderStyles = ({ euiTheme }: UseEuiTheme) => css
     }
 
     &:not(:first-child) {
-      ${logicalCSS('padding-block-start', euiTheme.size.s)}
+      ${logicalCSS('padding-top', euiTheme.size.s)}
 
       &::before {
         inset-block-start: ${euiTheme.size.xs};
@@ -31,8 +32,7 @@ export const globalSearchBucketHeaderStyles = ({ euiTheme }: UseEuiTheme) => css
     }
   }
 
-  .globalSearchBucketHeader__more,
-  .globalSearchBucketHeader__back {
+  .globalSearchBucketHeader__more {
     position: relative;
     z-index: 1;
     flex-shrink: 0;
@@ -43,7 +43,7 @@ export const globalSearchBucketHeaderStyles = ({ euiTheme }: UseEuiTheme) => css
   }
 
   .globalSearchBucketHeader__more {
-    ${logicalCSS('margin-inline-start', 'auto')}
-    ${logicalCSS('margin-inline-end', `calc(-1 * ${euiTheme.size.xs})`)}
+    ${logicalCSS('margin-left', 'auto')}
+    ${logicalCSS('margin-right', `calc(-1 * ${euiTheme.size.xs})`)}
   }
 `;

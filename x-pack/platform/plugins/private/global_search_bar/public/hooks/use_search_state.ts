@@ -8,7 +8,14 @@
 import type { EuiSelectableProps, EuiSelectableTemplateSitewideOption } from '@elastic/eui';
 import type { EuiSelectableOnChangeEvent } from '@elastic/eui/src/components/selectable/selectable';
 import type { MouseEvent, RefObject } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { Subscription } from 'rxjs';
 import type {
   GlobalSearchBucketId,
@@ -48,6 +55,10 @@ const bucketTitles: Record<GlobalSearchBucketId, string> = {
 interface UseSearchStateOptions extends Omit<SearchProps, 'basePathUrl'> {
   /** Called after a result is selected and navigation is triggered. */
   onResultSelect?: () => void;
+  /** When set (e.g. search modal), overrides default in-popover "show all recent" behavior. */
+  onShowAllRecent?: () => void;
+  /** Modal nested Recent screen: show all recent items only while the query is empty. */
+  nestedRecentContext?: boolean;
 }
 
 export interface SearchStateResult {
@@ -66,6 +77,8 @@ export interface SearchStateResult {
   ) => void;
   onActiveOptionChange: NonNullable<EuiSelectableProps['onActiveOptionChange']>;
   selectableListProps: NonNullable<EuiSelectableProps['listProps']>;
+  resultsView: GlobalSearchResultsView;
+  showAllRecent: () => void;
 }
 
 const getSelectableRank = (
@@ -91,6 +104,8 @@ export const useSearchState = ({
   navigateToUrl,
   reportEvent,
   onResultSelect,
+  onShowAllRecent: onShowAllRecentOverride,
+  nestedRecentContext = false,
   getNavigation$,
   prependBasePath = (path) => path,
 }: UseSearchStateOptions): SearchStateResult => {
@@ -128,12 +143,24 @@ export const useSearchState = ({
   const [searchCharLimitExceeded, setSearchCharLimitExceeded] = useState(false);
   const [resultsView, setResultsView] = useState<GlobalSearchResultsView>('main');
 
-  const showAllRecent = useCallback(() => {
-    setResultsView('recent');
-  }, []);
+  const activeResultsView = useMemo((): GlobalSearchResultsView => {
+    if (nestedRecentContext) {
+      return searchValue.trim() === '' ? 'recent' : 'main';
+    }
 
-  const backToMainResults = useCallback(() => {
-    setResultsView('main');
+    if (resultsView === 'recent' && searchValue.trim() !== '') {
+      return 'main';
+    }
+
+    return resultsView;
+  }, [nestedRecentContext, resultsView, searchValue]);
+
+  const activeResultsViewRef = useRef(activeResultsView);
+  activeResultsViewRef.current = activeResultsView;
+
+  const showAllRecentRef = useRef<() => void>(() => {});
+  const stableShowAllRecent = useCallback(() => {
+    showAllRecentRef.current();
   }, []);
 
   const searchSubscription = useRef<Subscription | null>(null);
@@ -189,11 +216,16 @@ export const useSearchState = ({
       results: GlobalSearchResult[],
       suggestions: SearchSuggestion[],
       searchTagIds: string[] = [],
-      term = ''
+      term = '',
+      view: GlobalSearchResultsView = activeResultsViewRef.current
     ) => {
       lastUpdateParamsRef.current = { results, suggestions, searchTagIds, term };
       const recent = getRecentPages();
-      const buckets = organizeGlobalSearchResults({ results, recent, term });
+      const buckets = organizeGlobalSearchResults({
+        results,
+        recent,
+        term: view === 'recent' ? '' : term,
+      });
 
       setOptions(
         buildSelectableOptionsFromBuckets({
@@ -203,23 +235,59 @@ export const useSearchState = ({
           searchTagIds,
           getTagList: taggingApi?.ui.getTagList,
           getNavigationParent,
-          view: resultsView,
-          onShowAllRecent: showAllRecent,
-          onBackToMain: backToMainResults,
+          view,
+          onShowAllRecent: stableShowAllRecent,
         })
       );
     },
-    [taggingApi, resultsView, showAllRecent, backToMainResults, getNavigationParent]
+    [taggingApi, stableShowAllRecent, getNavigationParent]
   );
 
+  useLayoutEffect(() => {
+    showAllRecentRef.current = () => {
+      if (onShowAllRecentOverride) {
+        searchSubscription.current?.unsubscribe();
+        searchSubscription.current = null;
+
+        onShowAllRecentOverride();
+
+        const params = lastUpdateParamsRef.current;
+        if (params) {
+          updateOptions(params.results, params.suggestions, params.searchTagIds, '', 'recent');
+        } else {
+          updateOptions(latestResultsRef.current, [], [], '', 'recent');
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      setResultsView('recent');
+      setIsLoading(false);
+
+      const params = lastUpdateParamsRef.current;
+      if (params) {
+        updateOptions(params.results, params.suggestions, params.searchTagIds, '', 'recent');
+        return;
+      }
+
+      updateOptions(latestResultsRef.current, [], [], '', 'recent');
+    };
+  }, [onShowAllRecentOverride, updateOptions]);
+
   useEffect(() => {
     const params = lastUpdateParamsRef.current;
     if (!params || !initialLoad) {
       return;
     }
 
-    updateOptions(params.results, params.suggestions, params.searchTagIds, params.term);
-  }, [resultsView, updateOptions, initialLoad]);
+    updateOptions(
+      params.results,
+      params.suggestions,
+      params.searchTagIds,
+      params.term,
+      activeResultsView
+    );
+  }, [activeResultsView, updateOptions, initialLoad]);
 
   useEffect(() => {
     const params = lastUpdateParamsRef.current;
@@ -227,8 +295,14 @@ export const useSearchState = ({
       return;
     }
 
-    updateOptions(params.results, params.suggestions, params.searchTagIds, params.term);
-  }, [navigationTree, updateOptions, initialLoad]);
+    updateOptions(
+      params.results,
+      params.suggestions,
+      params.searchTagIds,
+      params.term,
+      activeResultsView
+    );
+  }, [navigationTree, updateOptions, initialLoad, activeResultsView]);
 
   const triggerInitialLoad = useCallback(() => {
     setResultsView('main');
@@ -242,6 +316,11 @@ export const useSearchState = ({
   useDebounce(
     () => {
       if (initialLoad) {
+        if (activeResultsViewRef.current === 'recent' && searchValue.trim() === '') {
+          setIsLoading(false);
+          return;
+        }
+
         // cancel pending search if not completed yet
         if (searchSubscription.current) {
           searchSubscription.current?.unsubscribe();
@@ -291,7 +370,13 @@ export const useSearchState = ({
                 (a, b) => b.score - a.score
               );
               latestResultsRef.current = aggregatedResults;
-              updateOptions(aggregatedResults, suggestions, searchParams.tags, normalizedTerm);
+              updateOptions(
+                aggregatedResults,
+                suggestions,
+                searchParams.tags,
+                normalizedTerm,
+                activeResultsViewRef.current
+              );
               return;
             }
 
@@ -309,7 +394,13 @@ export const useSearchState = ({
               ...aggregatedResults,
             ];
             latestResultsRef.current = aggregatedResults;
-            updateOptions(aggregatedResults, suggestions, searchParams.tags, '');
+            updateOptions(
+              aggregatedResults,
+              suggestions,
+              searchParams.tags,
+              '',
+              activeResultsViewRef.current
+            );
           },
           error: (err) => {
             setIsLoading(false);
@@ -434,9 +525,15 @@ export const useSearchState = ({
       isVirtualized: true,
       onMouseDown: (event: MouseEvent) => {
         const target = event.target as HTMLElement | null;
+        if (target?.closest('[data-test-subj="global-search-recent-more"]')) {
+          event.preventDefault();
+          event.stopPropagation();
+          showAllRecentRef.current();
+          return;
+        }
         if (target?.closest('.euiSelectableListItem')) {
           isPointerSelectRef.current = true;
-          pointerEventRef.current = event.nativeEvent;
+          pointerEventRef.current = event;
         }
       },
     }),
@@ -453,7 +550,11 @@ export const useSearchState = ({
 
       isPointerSelectRef.current = false;
       pointerSelectHandledRef.current = true;
-      handleOptionSelect(option, pointerEventRef.current ?? new MouseEvent('click'));
+      handleOptionSelect(
+        option,
+        pointerEventRef.current ??
+          ({ shiftKey: false, ctrlKey: false, metaKey: false } as EuiSelectableOnChangeEvent)
+      );
       pointerEventRef.current = null;
     },
     [handleOptionSelect]
@@ -467,6 +568,10 @@ export const useSearchState = ({
     ) => {
       if (pointerSelectHandledRef.current) {
         pointerSelectHandledRef.current = false;
+        return;
+      }
+
+      if (changedOption?.isGroupLabel) {
         return;
       }
 
@@ -496,5 +601,7 @@ export const useSearchState = ({
     setSearchRef,
     searchRef,
     triggerInitialLoad,
+    resultsView,
+    showAllRecent: stableShowAllRecent,
   };
 };
