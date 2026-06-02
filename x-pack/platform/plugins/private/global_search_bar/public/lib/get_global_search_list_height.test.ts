@@ -20,7 +20,7 @@ describe('getGlobalSearchSelectableListHeight', () => {
       { label: 'Dashboard', key: '2' },
     ];
 
-    expect(getGlobalSearchSelectableListHeight(options, { rowHeight: 40, maxHeight: 500 })).toBe(120);
+    expect(getGlobalSearchSelectableListHeight(options, { rowHeight: 52, maxHeight: 500 })).toBe(156);
   });
 
   it('adds extra height for group labels after the first', () => {
@@ -31,7 +31,7 @@ describe('getGlobalSearchSelectableListHeight', () => {
       { label: 'Settings', key: '2' },
     ];
 
-    expect(getGlobalSearchSelectableListHeight(options, { rowHeight: 40, maxHeight: 500 })).toBe(176);
+    expect(getGlobalSearchSelectableListHeight(options, { rowHeight: 52, maxHeight: 500 })).toBe(224);
   });
 
   it('caps height at the configured maximum', () => {
@@ -40,6 +40,6 @@ describe('getGlobalSearchSelectableListHeight', () => {
       key: `${index}`,
     }));
 
-    expect(getGlobalSearchSelectableListHeight(options, { rowHeight: 40, maxHeight: 500 })).toBe(500);
+    expect(getGlobalSearchSelectableListHeight(options, { rowHeight: 52, maxHeight: 500 })).toBe(500);
   });
 });

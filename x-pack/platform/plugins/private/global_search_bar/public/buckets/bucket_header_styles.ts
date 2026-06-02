@@ -15,20 +15,10 @@ export const globalSearchBucketHeaderStyles = ({ euiTheme }: UseEuiTheme) => css
     align-items: center;
     gap: ${euiTheme.size.xs};
     inline-size: 100%;
-    ${logicalCSS('padding-vertical', euiTheme.size.xs)}
-    ${logicalCSS('padding-left', euiTheme.size.s)}
     min-block-size: auto;
 
     &::before {
       pointer-events: none;
-    }
-
-    &:not(:first-child) {
-      ${logicalCSS('padding-top', euiTheme.size.s)}
-
-      &::before {
-        inset-block-start: ${euiTheme.size.xs};
-      }
     }
   }
 

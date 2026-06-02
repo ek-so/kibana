@@ -21,9 +21,13 @@ import { SearchFooter } from './search_footer';
 import { SearchPlaceholder } from './search_placeholder';
 import { useSearchState } from '../hooks/use_search_state';
 import type { SearchModalProps } from './types';
-import { globalSearchSelectableListStyles } from '../lib/global_search_list_styles';
+import { globalSearchModalListStyles } from '../lib/global_search_list_styles';
 import { EmptyMessage } from './empty_message';
-import { SEARCH_MODAL_PADDING_PX, SEARCH_MODAL_SELECTOR_PREFIX } from './types';
+import {
+  SEARCH_MODAL_PADDING_PX,
+  SEARCH_MODAL_ROW_HEIGHT_PX,
+  SEARCH_MODAL_SELECTOR_PREFIX,
+} from './types';
 import { CharLimitExceededMessage } from './char_limit_exceeded_message';
 import { useSearchModalStack } from '../hooks/use_search_modal_stack';
 import {
@@ -116,7 +120,7 @@ export const SearchModalInternal = ({
       justify-content: ${isLoading || options.length === 0 ? 'center' : 'flex-start'};
     }
 
-    ${globalSearchSelectableListStyles({ euiTheme })}
+    ${globalSearchModalListStyles({ euiTheme })}
   `;
 
   const footerStyles = css`
@@ -138,6 +142,10 @@ export const SearchModalInternal = ({
         ...selectableListProps,
         className: 'eui-yScroll',
         showIcons: false,
+        rowHeight: SEARCH_MODAL_ROW_HEIGHT_PX,
+        windowProps: {
+          itemSize: () => SEARCH_MODAL_ROW_HEIGHT_PX,
+        },
       }}
       height="full"
       searchProps={{

@@ -16,13 +16,14 @@ export const SEARCH_MODAL_SELECTOR_PREFIX = 'chromeProjectNextSearchModal';
 export const SEARCH_MODAL_HEIGHT_PX = 560;
 export const SEARCH_MODAL_WIDTH_PX = 800;
 export const SEARCH_MODAL_PADDING_PX = 8;
-/** Row height for virtualized global search lists (EuiSelectableTemplateSitewide default). */
-export const GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX = 40;
+/** Row height for virtualized global search lists in the header popover (EuiSelectableTemplateSitewide). */
+export const GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX = 52;
+
+/** Uniform row height for every cell in the project search modal list. */
+export const SEARCH_MODAL_ROW_HEIGHT_PX = 40;
 
 /** Max height of the results list in the search popover. */
 export const GLOBAL_SEARCH_POPOVER_LIST_MAX_HEIGHT_PX = 500;
-
-export const SEARCH_MODAL_ROW_HEIGHT_PX = GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX;
 
 export interface ProjectNavigationState {
   navigationTree: NavigationTreeDefinitionUI;

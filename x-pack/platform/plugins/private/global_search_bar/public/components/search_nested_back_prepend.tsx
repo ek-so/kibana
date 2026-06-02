@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { EuiFormPrepend } from '@elastic/eui';
+import { EuiButtonIcon } from '@elastic/eui';
 import React from 'react';
 import { i18nStrings } from '../strings';
 
@@ -18,16 +18,18 @@ export interface SearchNestedBackPrependProps {
 }
 
 export const SearchNestedBackPrepend = ({ onClick }: SearchNestedBackPrependProps) => (
-  <EuiFormPrepend
+  <EuiButtonIcon
     aria-label={i18nStrings.nestedBackAriaText}
     className="globalSearchNestedBackPrepend"
+    color="text"
     data-test-subj="global-search-nested-back"
-    iconLeft="arrowLeft"
-    type="button"
+    display="empty"
+    iconType="sortLeft"
     onMouseDown={stopPointerActivation}
     onClick={(event) => {
       stopPointerActivation(event);
       onClick();
     }}
+    size="s"
   />
 );
