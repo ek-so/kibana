@@ -40,7 +40,7 @@ const dedupeNavigateFromRecent = (
  * Assigns flat provider results into Navigate / Recent / Results buckets for display.
  *
  * When the query is empty, shows Recent and Navigate (applications). When the user is
- * searching, shows only a single Results bucket with all hits (unlimited).
+ * searching, shows Navigate (applications) and Results (other types) only.
  */
 export const organizeGlobalSearchResults = ({
   results,
@@ -50,16 +50,25 @@ export const organizeGlobalSearchResults = ({
   const isEmptyTerm = term.length === 0;
 
   if (!isEmptyTerm) {
-    if (results.length === 0) {
-      return [];
+    const buckets: GlobalSearchBucket[] = [];
+    const navigateItems = results.filter(({ type }) => type === 'application');
+    const resultItems = results.filter(({ type }) => type !== 'application');
+
+    if (navigateItems.length > 0) {
+      buckets.push({
+        id: GLOBAL_SEARCH_BUCKET_NAVIGATE,
+        items: [...navigateItems].sort(sortByScore),
+      });
     }
 
-    return [
-      {
+    if (resultItems.length > 0) {
+      buckets.push({
         id: GLOBAL_SEARCH_BUCKET_RESULTS,
-        items: [...results].sort(sortByScore),
-      },
-    ];
+        items: [...resultItems].sort(sortByScore),
+      });
+    }
+
+    return buckets;
   }
 
   const navigateItems = results.filter(({ type }) => type === 'application');

@@ -60,7 +60,7 @@ describe('organizeGlobalSearchResults', () => {
     expect(buckets[1].items.map((i) => i.title)).toEqual(['Dashboards']);
   });
 
-  it('shows only results when searching, including applications', () => {
+  it('splits search hits into navigate and results buckets', () => {
     const buckets = organizeGlobalSearchResults({
       results: [
         createResult({ id: 'discover', type: 'application', title: 'Discover', score: 90 }),
@@ -77,8 +77,37 @@ describe('organizeGlobalSearchResults', () => {
       term: 'dash',
     });
 
-    expect(buckets.map((b) => b.id)).toEqual([GLOBAL_SEARCH_BUCKET_RESULTS]);
-    expect(buckets[0].items.map((i) => i.title)).toEqual(['Discover', 'My dashboard']);
+    expect(buckets.map((b) => b.id)).toEqual([
+      GLOBAL_SEARCH_BUCKET_NAVIGATE,
+      GLOBAL_SEARCH_BUCKET_RESULTS,
+    ]);
+    expect(buckets[0].items.map((i) => i.title)).toEqual(['Discover']);
+    expect(buckets[1].items.map((i) => i.title)).toEqual(['My dashboard']);
+  });
+
+  it('excludes recent when searching', () => {
+    const recentDashboard = createResult({
+      id: 'recent-dash',
+      type: 'dashboard',
+      title: 'Sales Dashboard',
+      url: '/app/dashboards#/view/1',
+    });
+
+    const buckets = organizeGlobalSearchResults({
+      results: [
+        createResult({
+          id: 'dashboards',
+          type: 'application',
+          title: 'Dashboards',
+          url: '/app/dashboards',
+        }),
+      ],
+      recent: [recentDashboard],
+      term: 'dash',
+    });
+
+    expect(buckets.map((b) => b.id)).toEqual([GLOBAL_SEARCH_BUCKET_NAVIGATE]);
+    expect(buckets[0].items.map((i) => i.title)).toEqual(['Dashboards']);
   });
 
   it('sorts navigate alphabetically when the term is empty', () => {

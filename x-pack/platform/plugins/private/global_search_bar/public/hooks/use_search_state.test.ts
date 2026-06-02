@@ -348,7 +348,7 @@ describe('useSearchState', () => {
     expect(labelsAfterLateEmit).toEqual(['Map', 'Visualize']);
   });
 
-  it('hides recent and navigate buckets while searching', async () => {
+  it('shows navigate and hides non-matching recent while searching', async () => {
     mockGetRecentPages.mockReturnValue([
       createResult({ id: 'visited-dashboard', type: 'dashboard', title: 'Sales Overview' }),
     ]);
@@ -395,7 +395,7 @@ describe('useSearchState', () => {
         (option: { isGroupLabel?: boolean; label?: string }) =>
           option.isGroupLabel && option.label === 'Navigate'
       )
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('records a visited page when a search result is selected', async () => {

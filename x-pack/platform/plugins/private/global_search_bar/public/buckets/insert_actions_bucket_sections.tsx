@@ -21,7 +21,13 @@ import { i18nStrings } from '../strings';
 export const shouldShowGlobalSearchActions = (
   term: string,
   view: GlobalSearchResultsView
-): boolean => view === 'actions' || (view === 'main' && term.length === 0);
+): boolean => view === 'actions' || view === 'main';
+
+const getMainViewActions = (
+  actions: GlobalSearchAction[],
+  term: string
+): GlobalSearchAction[] =>
+  term.length === 0 ? actions : filterActionsByTerm(actions, term);
 
 const buildActionsSection = ({
   actions,
@@ -108,11 +114,12 @@ export const insertActionsModalSections = ({
     return actionsSection ? [actionsSection] : [];
   }
 
+  const mainViewActions = getMainViewActions(actions, term);
   const actionsSection = buildActionsModalSection({
-    actions,
+    actions: mainViewActions,
     actionsTitle,
     view,
-    onShowAllActions,
+    onShowAllActions: term.length === 0 ? onShowAllActions : undefined,
   });
 
   if (!actionsSection) {
@@ -162,9 +169,12 @@ export const insertActionsSelectableOptions = ({
     ];
   }
 
-  const visibleActions = actions.slice(0, ACTIONS_ITEMS_MAIN_LIMIT);
+  const mainViewActions = getMainViewActions(actions, term);
+  const visibleActions = mainViewActions.slice(0, ACTIONS_ITEMS_MAIN_LIMIT);
   const hasMoreActions =
-    actions.length > ACTIONS_ITEMS_MAIN_LIMIT && onShowAllActions !== undefined;
+    term.length === 0 &&
+    actions.length > ACTIONS_ITEMS_MAIN_LIMIT &&
+    onShowAllActions !== undefined;
 
   if (visibleActions.length === 0) {
     return options;

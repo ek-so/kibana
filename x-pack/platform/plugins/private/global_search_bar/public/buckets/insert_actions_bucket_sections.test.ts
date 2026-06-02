@@ -12,9 +12,9 @@ import {
 } from './insert_actions_bucket_sections';
 import type { SearchModalBucketSection } from './build_modal_bucket_sections';
 
-const createAction = (id: string) => ({
+const createAction = (id: string, title = `Action ${id}`) => ({
   id,
-  title: `Action ${id}`,
+  title,
   icon: 'plus' as const,
   execute: jest.fn(),
 });
@@ -42,14 +42,38 @@ describe('insertActionsModalSections', () => {
     expect(result[1].options).toHaveLength(1);
   });
 
-  it('does not insert actions when the user is searching in the main view', () => {
+  it('inserts filtered actions when the user is searching in the main view', () => {
     const sections: SearchModalBucketSection[] = [
       { id: GLOBAL_SEARCH_BUCKET_RECENT, title: 'Recent', options: [] },
     ];
 
     const result = insertActionsModalSections({
       sections,
-      actions: [createAction('create-dashboard')],
+      actions: [
+        createAction('create-dashboard', 'Create dashboard'),
+        createAction('create-rule', 'Create rule'),
+      ],
+      actionsTitle: 'Actions',
+      term: 'dash',
+      view: 'main',
+    });
+
+    expect(result.map((section) => section.id)).toEqual([
+      GLOBAL_SEARCH_BUCKET_RECENT,
+      GLOBAL_SEARCH_BUCKET_ACTIONS,
+    ]);
+    expect(result[1].options).toHaveLength(1);
+    expect(result[1].options[0].key).toBe('create-dashboard');
+  });
+
+  it('does not insert actions when no actions match the search term', () => {
+    const sections: SearchModalBucketSection[] = [
+      { id: GLOBAL_SEARCH_BUCKET_RECENT, title: 'Recent', options: [] },
+    ];
+
+    const result = insertActionsModalSections({
+      sections,
+      actions: [createAction('create-rule')],
       actionsTitle: 'Actions',
       term: 'dash',
       view: 'main',
