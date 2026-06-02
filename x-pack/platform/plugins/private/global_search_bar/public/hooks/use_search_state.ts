@@ -40,8 +40,16 @@ import type { SearchProps } from '../components/types';
 import { parseSearchParams } from '../search_syntax';
 import { buildSelectableOptionsFromBuckets } from '../buckets/build_selectable_options';
 import type { GlobalSearchResultsView } from '../buckets/build_selectable_options';
+import {
+  buildModalBucketSections,
+  type SearchModalBucketSection,
+} from '../buckets/build_modal_bucket_sections';
+import { suggestionToOption } from '../lib';
 import { getRecentPages, recordRecentPage } from '../recent/recent_store';
-import { GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX } from '../components/types';
+import {
+  GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX,
+  SEARCH_MODAL_ROW_HEIGHT_PX,
+} from '../components/types';
 import { i18nStrings } from '../strings';
 
 const UNKNOWN_TAG_ID = '__unknown__';
@@ -59,7 +67,12 @@ interface UseSearchStateOptions extends Omit<SearchProps, 'basePathUrl'> {
   onShowAllRecent?: () => void;
   /** Modal nested Recent screen: show all recent items only while the query is empty. */
   nestedRecentContext?: boolean;
+  /** Renders each bucket as its own section in the search modal. */
+  useModalBucketLayout?: boolean;
 }
+
+const isSelectableResultOption = (option: EuiSelectableTemplateSitewideOption): boolean =>
+  !option.isGroupLabel;
 
 export interface SearchStateResult {
   searchValue: string;
@@ -79,6 +92,8 @@ export interface SearchStateResult {
   selectableListProps: NonNullable<EuiSelectableProps['listProps']>;
   resultsView: GlobalSearchResultsView;
   showAllRecent: () => void;
+  modalBucketSections: SearchModalBucketSection[];
+  suggestionOptions: EuiSelectableTemplateSitewideOption[];
 }
 
 const getSelectableRank = (
@@ -87,7 +102,7 @@ const getSelectableRank = (
 ): number | null => {
   let rank = 0;
   for (const option of selection) {
-    if (option.isGroupLabel) {
+    if (!isSelectableResultOption(option)) {
       continue;
     }
     rank += 1;
@@ -106,6 +121,7 @@ export const useSearchState = ({
   onResultSelect,
   onShowAllRecent: onShowAllRecentOverride,
   nestedRecentContext = false,
+  useModalBucketLayout = false,
   getNavigation$,
   prependBasePath = (path) => path,
 }: UseSearchStateOptions): SearchStateResult => {
@@ -138,6 +154,10 @@ export const useSearchState = ({
   const [loadGeneration, setLoadGeneration] = useState(0);
   const [searchValue, setSearchValue] = useState<string>('');
   const [options, setOptions] = useState<EuiSelectableTemplateSitewideOption[]>([]);
+  const [modalBucketSections, setModalBucketSections] = useState<SearchModalBucketSection[]>([]);
+  const [suggestionOptions, setSuggestionOptions] = useState<EuiSelectableTemplateSitewideOption[]>(
+    []
+  );
   const [searchableTypes, setSearchableTypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [searchCharLimitExceeded, setSearchCharLimitExceeded] = useState(false);
@@ -227,6 +247,25 @@ export const useSearchState = ({
         term: view === 'recent' ? '' : term,
       });
 
+      if (useModalBucketLayout) {
+        setSuggestionOptions(suggestions.map(suggestionToOption));
+        setModalBucketSections(
+          buildModalBucketSections({
+            buckets,
+            bucketTitles,
+            searchTagIds,
+            getTagList: taggingApi?.ui.getTagList,
+            getNavigationParent,
+            view,
+            onShowAllRecent: stableShowAllRecent,
+          })
+        );
+        setOptions([]);
+        return;
+      }
+
+      setSuggestionOptions([]);
+      setModalBucketSections([]);
       setOptions(
         buildSelectableOptionsFromBuckets({
           buckets,
@@ -240,7 +279,7 @@ export const useSearchState = ({
         })
       );
     },
-    [taggingApi, stableShowAllRecent, getNavigationParent]
+    [taggingApi, stableShowAllRecent, getNavigationParent, useModalBucketLayout]
   );
 
   useLayoutEffect(() => {
@@ -441,7 +480,7 @@ export const useSearchState = ({
       event: EuiSelectableOnChangeEvent,
       selection: EuiSelectableTemplateSitewideOption[] = optionsRef.current
     ) => {
-      if (selected.isGroupLabel) {
+      if (!isSelectableResultOption(selected)) {
         return;
       }
 
@@ -519,10 +558,31 @@ export const useSearchState = ({
     [reportEvent, navigateToUrl, searchValue]
   );
 
-  const selectableListProps = useMemo(
-    (): NonNullable<EuiSelectableProps['listProps']> => ({
-      rowHeight: GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX,
-      isVirtualized: true,
+  const selectableListProps = useMemo((): NonNullable<EuiSelectableProps['listProps']> => {
+    const listProps: NonNullable<EuiSelectableProps['listProps']> = {
+      rowHeight: useModalBucketLayout
+        ? SEARCH_MODAL_ROW_HEIGHT_PX
+        : GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX,
+      isVirtualized: !useModalBucketLayout,
+    };
+
+    const pointerListHandler = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('.euiSelectableListItem')) {
+        isPointerSelectRef.current = true;
+        pointerEventRef.current = event;
+      }
+    };
+
+    if (useModalBucketLayout) {
+      return {
+        ...listProps,
+        onMouseDown: pointerListHandler,
+      };
+    }
+
+    return {
+      ...listProps,
       onMouseDown: (event: MouseEvent) => {
         const target = event.target as HTMLElement | null;
         if (target?.closest('[data-test-subj="global-search-recent-more"]')) {
@@ -531,20 +591,16 @@ export const useSearchState = ({
           showAllRecentRef.current();
           return;
         }
-        if (target?.closest('.euiSelectableListItem')) {
-          isPointerSelectRef.current = true;
-          pointerEventRef.current = event;
-        }
+        pointerListHandler(event);
       },
-    }),
-    []
-  );
+    };
+  }, [useModalBucketLayout]);
 
   const onActiveOptionChange = useCallback<
     NonNullable<EuiSelectableProps['onActiveOptionChange']>
   >(
     (option) => {
-      if (!isPointerSelectRef.current || !option || option.isGroupLabel) {
+      if (!isPointerSelectRef.current || !option || !isSelectableResultOption(option)) {
         return;
       }
 
@@ -571,14 +627,16 @@ export const useSearchState = ({
         return;
       }
 
-      if (changedOption?.isGroupLabel) {
+      if (changedOption && !isSelectableResultOption(changedOption)) {
         return;
       }
 
       const selected =
-        changedOption && !changedOption.isGroupLabel
+        changedOption && isSelectableResultOption(changedOption)
           ? changedOption
-          : selection.find(({ checked, isGroupLabel }) => checked === 'on' && !isGroupLabel);
+          : selection.find(
+              (option) => option.checked === 'on' && isSelectableResultOption(option)
+            );
 
       if (!selected) {
         return;
@@ -603,5 +661,7 @@ export const useSearchState = ({
     triggerInitialLoad,
     resultsView,
     showAllRecent: stableShowAllRecent,
+    modalBucketSections,
+    suggestionOptions,
   };
 };

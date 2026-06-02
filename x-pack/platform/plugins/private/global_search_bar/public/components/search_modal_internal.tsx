@@ -6,12 +6,12 @@
  */
 
 import {
+  EuiFieldSearch,
   EuiHorizontalRule,
+  EuiLoadingSpinner,
   EuiModalBody,
   EuiModalFooter,
   EuiModalHeader,
-  EuiSelectable,
-  euiSelectableTemplateSitewideRenderOptions,
   useEuiTheme,
 } from '@elastic/eui';
 import { css } from '@emotion/react';
@@ -23,11 +23,7 @@ import { useSearchState } from '../hooks/use_search_state';
 import type { SearchModalProps } from './types';
 import { globalSearchModalListStyles } from '../lib/global_search_list_styles';
 import { EmptyMessage } from './empty_message';
-import {
-  SEARCH_MODAL_PADDING_PX,
-  SEARCH_MODAL_ROW_HEIGHT_PX,
-  SEARCH_MODAL_SELECTOR_PREFIX,
-} from './types';
+import { SEARCH_MODAL_PADDING_PX, SEARCH_MODAL_SELECTOR_PREFIX } from './types';
 import { CharLimitExceededMessage } from './char_limit_exceeded_message';
 import { useSearchModalStack } from '../hooks/use_search_modal_stack';
 import {
@@ -35,6 +31,9 @@ import {
   isRecentModalScreen,
 } from '../search_modal/search_modal_stack';
 import { SearchNestedBackPrepend } from './search_nested_back_prepend';
+import { GlobalSearchBucketHeader } from './global_search_bucket_header';
+import { SearchModalBucketSelectable } from './search_modal_bucket_selectable';
+import type { SearchModalBucketSection } from '../buckets/build_modal_bucket_sections';
 
 export const SearchModalInternal = ({
   globalSearch,
@@ -57,7 +56,6 @@ export const SearchModalInternal = ({
   const {
     searchValue,
     setSearchValue,
-    options,
     isLoading,
     searchCharLimitExceeded,
     onChange,
@@ -65,6 +63,8 @@ export const SearchModalInternal = ({
     selectableListProps,
     setSearchRef,
     triggerInitialLoad,
+    modalBucketSections,
+    suggestionOptions,
   } = useSearchState({
     globalSearch,
     taggingApi,
@@ -74,6 +74,7 @@ export const SearchModalInternal = ({
     prependBasePath,
     onResultSelect: onClose,
     nestedRecentContext,
+    useModalBucketLayout: true,
     onShowAllRecent: () => {
       pushScreen(
         { id: GLOBAL_SEARCH_MODAL_RECENT_SCREEN_ID, title: i18nStrings.bucketRecent },
@@ -103,8 +104,6 @@ export const SearchModalInternal = ({
       reportEvent.searchBlur();
       resetStack();
     };
-    // Intentionally mount-only: `triggerInitialLoad` changes when options update; re-running
-    // would reset the nested stack right after "More" is clicked.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -117,7 +116,8 @@ export const SearchModalInternal = ({
       padding: ${SEARCH_MODAL_PADDING_PX}px;
       display: flex;
       flex-direction: column;
-      justify-content: ${isLoading || options.length === 0 ? 'center' : 'flex-start'};
+      justify-content: flex-start;
+      gap: 0;
     }
 
     ${globalSearchModalListStyles({ euiTheme })}
@@ -127,72 +127,115 @@ export const SearchModalInternal = ({
     padding: ${SEARCH_MODAL_PADDING_PX}px;
   `;
 
-  return (
-    <EuiSelectable
-      isLoading={isLoading}
-      isPreFiltered
-      onChange={onChange}
-      onActiveOptionChange={onActiveOptionChange}
-      options={options}
-      singleSelection="always"
-      renderOption={(option) =>
-        euiSelectableTemplateSitewideRenderOptions(option, searchValue)
-      }
-      listProps={{
-        ...selectableListProps,
-        className: 'eui-yScroll',
-        showIcons: false,
-        rowHeight: SEARCH_MODAL_ROW_HEIGHT_PX,
-        windowProps: {
-          itemSize: () => SEARCH_MODAL_ROW_HEIGHT_PX,
-        },
-      }}
-      height="full"
-      searchProps={{
-        autoFocus: true,
-        value: searchValue,
-        onInput: (e: React.UIEvent<HTMLInputElement>) => setSearchValue(e.currentTarget.value),
-        prepend: isNested ? (
-          <SearchNestedBackPrepend onClick={handleNestedBack} />
-        ) : undefined,
-        'data-test-subj': `${SEARCH_MODAL_SELECTOR_PREFIX}Input`,
-        inputRef: setSearchRef,
-        compressed: false,
-        'aria-label': i18nStrings.modalPlaceholderText,
-        placeholder: showRecentListInNested
-          ? currentScreen.title
-          : i18nStrings.modalPlaceholderText,
-        fullWidth: true,
-      }}
-      errorMessage={
-        searchCharLimitExceeded ? <CharLimitExceededMessage basePathUrl={basePathUrl} /> : null
-      }
-      emptyMessage={<EmptyMessage />}
-      noMatchesMessage={<SearchPlaceholder basePath={basePathUrl} />}
-      searchable
-    >
-      {(list, search) => (
-        <>
-          <EuiModalHeader
-            css={headerStyles}
-            data-test-subj={
-              isNested
-                ? `${SEARCH_MODAL_SELECTOR_PREFIX}HeaderNested`
-                : `${SEARCH_MODAL_SELECTOR_PREFIX}Header`
-            }
-          >
-            {search}
-          </EuiModalHeader>
-          <EuiModalBody css={bodyStyles}>{list}</EuiModalBody>
+  const hasBucketContent =
+    modalBucketSections.length > 0 || suggestionOptions.length > 0;
+  const showEmptyState = !isLoading && !hasBucketContent && !searchCharLimitExceeded;
+  const showNoMatches =
+    !isLoading &&
+    !searchCharLimitExceeded &&
+    searchValue.trim().length > 0 &&
+    modalBucketSections.length === 0 &&
+    suggestionOptions.length === 0;
+
+  const renderBucketSection = (section: SearchModalBucketSection, index: number) => (
+    <React.Fragment key={section.id}>
+      {index > 0 ? (
+        <div className="globalSearchModalSectionDivider">
           <EuiHorizontalRule margin="none" />
-          <EuiModalFooter
-            css={footerStyles}
-            data-test-subj={`${SEARCH_MODAL_SELECTOR_PREFIX}Footer`}
+        </div>
+      ) : null}
+      <section className="globalSearchModalBucket" data-test-subj={`global-search-modal-bucket-${section.id}`}>
+        <GlobalSearchBucketHeader
+          title={section.title}
+          action={section.headerAction}
+          data-test-subj={`global-search-bucket-${section.id}`}
+        />
+        <SearchModalBucketSelectable
+          options={section.options}
+          searchValue={searchValue}
+          onChange={onChange}
+          onActiveOptionChange={onActiveOptionChange}
+          listProps={selectableListProps}
+          data-test-subj={`global-search-modal-bucket-${section.id}-list`}
+        />
+      </section>
+    </React.Fragment>
+  );
+
+  return (
+    <>
+      <EuiModalHeader
+        css={headerStyles}
+        data-test-subj={
+          isNested
+            ? `${SEARCH_MODAL_SELECTOR_PREFIX}HeaderNested`
+            : `${SEARCH_MODAL_SELECTOR_PREFIX}Header`
+        }
+      >
+        <EuiFieldSearch
+          autoFocus
+          fullWidth
+          value={searchValue}
+          onChange={(event) => setSearchValue(event.currentTarget.value)}
+          prepend={
+            isNested ? <SearchNestedBackPrepend onClick={handleNestedBack} /> : undefined
+          }
+          inputRef={setSearchRef}
+          data-test-subj={`${SEARCH_MODAL_SELECTOR_PREFIX}Input`}
+          aria-label={i18nStrings.modalPlaceholderText}
+          placeholder={
+            showRecentListInNested ? currentScreen.title : i18nStrings.modalPlaceholderText
+          }
+          isInvalid={searchCharLimitExceeded}
+        />
+      </EuiModalHeader>
+
+      {searchCharLimitExceeded ? (
+        <div css={css`padding: 0 ${SEARCH_MODAL_PADDING_PX}px`}>
+          <CharLimitExceededMessage basePathUrl={basePathUrl} />
+        </div>
+      ) : null}
+
+      <EuiModalBody css={bodyStyles}>
+        {isLoading && !hasBucketContent ? (
+          <EuiLoadingSpinner size="m" css={css`align-self: center`} />
+        ) : null}
+
+        {suggestionOptions.length > 0 ? (
+          <section
+            className="globalSearchModalBucket"
+            data-test-subj="global-search-modal-bucket-suggestions"
           >
-            <SearchFooter />
-          </EuiModalFooter>
-        </>
-      )}
-    </EuiSelectable>
+            <SearchModalBucketSelectable
+              options={suggestionOptions}
+              searchValue={searchValue}
+              onChange={onChange}
+              onActiveOptionChange={onActiveOptionChange}
+              listProps={selectableListProps}
+              data-test-subj="global-search-modal-bucket-suggestions-list"
+            />
+          </section>
+        ) : null}
+
+        {suggestionOptions.length > 0 && modalBucketSections.length > 0 ? (
+          <div className="globalSearchModalSectionDivider">
+            <EuiHorizontalRule margin="none" />
+          </div>
+        ) : null}
+
+        {modalBucketSections.map(renderBucketSection)}
+
+        {showEmptyState ? <EmptyMessage /> : null}
+        {showNoMatches ? <SearchPlaceholder basePath={basePathUrl} /> : null}
+      </EuiModalBody>
+
+      <EuiHorizontalRule margin="none" />
+      <EuiModalFooter
+        css={footerStyles}
+        data-test-subj={`${SEARCH_MODAL_SELECTOR_PREFIX}Footer`}
+      >
+        <SearchFooter />
+      </EuiModalFooter>
+    </>
   );
 };

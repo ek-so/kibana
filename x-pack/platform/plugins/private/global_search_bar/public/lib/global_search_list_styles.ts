@@ -8,7 +8,11 @@
 import { css } from '@emotion/react';
 import type { UseEuiTheme } from '@elastic/eui';
 import { globalSearchBucketHeaderStyles } from '../buckets/bucket_header_styles';
-import { SEARCH_MODAL_ROW_HEIGHT_PX } from '../components/types';
+import {
+  SEARCH_MODAL_BUCKET_HEADER_HEIGHT_PX,
+  SEARCH_MODAL_PADDING_PX,
+  SEARCH_MODAL_ROW_HEIGHT_PX,
+} from '../components/types';
 
 const APPEND_OFFSET_PX = 4;
 const MODAL_PREPEND_ICON_WRAPPER_SIZE_PX = 28;
@@ -27,11 +31,11 @@ export const globalSearchSelectableListStyles = (euiThemeContext: UseEuiTheme) =
   }
 `;
 
-/** Fixed 40px rows for the project search modal (results and section headers). */
+/** Modal bucket lists: fixed 40px rows, compact icons, truncated append. */
 export const globalSearchModalListStyles = (euiThemeContext: UseEuiTheme) => css`
   ${globalSearchSelectableListStyles(euiThemeContext)}
 
-  .euiSelectableListItem {
+  .globalSearchModalBucket__list .euiSelectableListItem {
     block-size: ${SEARCH_MODAL_ROW_HEIGHT_PX}px;
     min-block-size: ${SEARCH_MODAL_ROW_HEIGHT_PX}px;
     max-block-size: ${SEARCH_MODAL_ROW_HEIGHT_PX}px;
@@ -39,26 +43,54 @@ export const globalSearchModalListStyles = (euiThemeContext: UseEuiTheme) => css
     overflow: hidden;
   }
 
-  .euiSelectableListItem .euiListItemLayout,
-  .euiSelectableListItem .euiListItemLayout__action {
+  .globalSearchModalBucket__list .euiListItemLayout,
+  .globalSearchModalBucket__list .euiListItemLayout__action {
     min-block-size: 100%;
   }
 
-  .euiSelectableListItem .euiListItemLayout__text {
+  .globalSearchModalBucket__list .euiListItemLayout__text {
     padding-block: 0;
   }
 
-  .euiSelectableListItem [data-test-subj='globalSearchResultPrependIcon'] {
+  .globalSearchModalBucket__list .euiListItemLayout__append {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .globalSearchModalBucket__list [data-test-subj='globalSearchResultPrependIcon'] {
     inline-size: ${MODAL_PREPEND_ICON_WRAPPER_SIZE_PX}px;
     block-size: ${MODAL_PREPEND_ICON_WRAPPER_SIZE_PX}px;
   }
 
-  .euiSelectableListItem [data-test-subj='globalSearchResultPrependIcon'] .euiIcon {
+  .globalSearchModalBucket__list [data-test-subj='globalSearchResultPrependIcon'] .euiIcon {
     inline-size: ${MODAL_PREPEND_ICON_SIZE_PX}px;
     block-size: ${MODAL_PREPEND_ICON_SIZE_PX}px;
   }
 
-  .globalSearchBucketHeader.euiSelectableListItem::before {
-    display: none;
+  .globalSearchModalSectionDivider {
+    margin-block: ${SEARCH_MODAL_PADDING_PX}px;
+    padding: 0;
+  }
+
+  .globalSearchModalBucket .globalSearchBucketHeader:not(.euiSelectableListItem) {
+    block-size: ${SEARCH_MODAL_BUCKET_HEADER_HEIGHT_PX}px;
+    min-block-size: ${SEARCH_MODAL_BUCKET_HEADER_HEIGHT_PX}px;
+    max-block-size: ${SEARCH_MODAL_BUCKET_HEADER_HEIGHT_PX}px;
+    padding-block: 0;
+    box-sizing: border-box;
+  }
+
+  .globalSearchModalBucket .globalSearchBucketHeader:not(.euiSelectableListItem) h3 {
+    margin: 0;
+  }
+
+  .globalSearchModalBucket .euiSelectable {
+    flex: 0 0 auto;
+  }
+
+  .globalSearchModalBucket .euiSelectableList {
+    flex: 0 0 auto;
   }
 `;

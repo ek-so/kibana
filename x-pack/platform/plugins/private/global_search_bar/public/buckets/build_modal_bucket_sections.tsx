@@ -6,6 +6,8 @@
  */
 
 import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
+import type { ReactNode } from 'react';
+import React from 'react';
 import {
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
@@ -14,19 +16,17 @@ import {
 } from '@kbn/global-search-plugin/public';
 import type { NavigationParentContext } from '@kbn/core-chrome-browser';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
-import type { SearchSuggestion } from '../suggestions';
-import { resultToOption, suggestionToOption } from '../lib';
+import { resultToOption } from '../lib';
 import { getRecentPages, RECENT_ITEMS_MAIN_LIMIT } from '../recent/recent_store';
 import { RecentBucketMoreButton } from './recent_bucket_header_actions';
+import type { GlobalSearchResultsView } from './build_selectable_options';
+import { NAVIGATE_ITEMS_MAIN_LIMIT } from './build_selectable_options';
 
-export type GlobalSearchResultsView = 'main' | 'recent';
-
-/** Maximum navigate items shown in the main search popover. */
-export const NAVIGATE_ITEMS_MAIN_LIMIT = 5;
-
-export interface BucketDisplayConfig {
+export interface SearchModalBucketSection {
   id: GlobalSearchBucketId;
   title: string;
+  options: EuiSelectableTemplateSitewideOption[];
+  headerAction?: ReactNode;
 }
 
 const buildResultOptions = ({
@@ -42,13 +42,12 @@ const buildResultOptions = ({
 }): EuiSelectableTemplateSitewideOption[] =>
   items.map((item) => ({
     ...resultToOption(item, searchTagIds, getTagList, getNavigationParent),
-    'data-test-subj': `nav-search-option`,
+    'data-test-subj': 'nav-search-option',
   }));
 
-export const buildSelectableOptionsFromBuckets = ({
+export const buildModalBucketSections = ({
   buckets,
   bucketTitles,
-  suggestions,
   searchTagIds,
   getTagList,
   getNavigationParent,
@@ -57,13 +56,12 @@ export const buildSelectableOptionsFromBuckets = ({
 }: {
   buckets: GlobalSearchBucket[];
   bucketTitles: Record<GlobalSearchBucketId, string>;
-  suggestions: SearchSuggestion[];
   searchTagIds: string[];
   getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList'];
   getNavigationParent?: (url: string) => NavigationParentContext;
   view?: GlobalSearchResultsView;
   onShowAllRecent?: () => void;
-}): EuiSelectableTemplateSitewideOption[] => {
+}): SearchModalBucketSection[] => {
   if (view === 'recent') {
     const allRecentItems = getRecentPages();
 
@@ -73,21 +71,19 @@ export const buildSelectableOptionsFromBuckets = ({
 
     return [
       {
-        label: bucketTitles[GLOBAL_SEARCH_BUCKET_RECENT],
-        isGroupLabel: true,
-        className: 'globalSearchBucketHeader',
-        'data-test-subj': `global-search-bucket-${GLOBAL_SEARCH_BUCKET_RECENT}-all`,
+        id: GLOBAL_SEARCH_BUCKET_RECENT,
+        title: bucketTitles[GLOBAL_SEARCH_BUCKET_RECENT],
+        options: buildResultOptions({
+          items: allRecentItems,
+          searchTagIds,
+          getTagList,
+          getNavigationParent,
+        }),
       },
-      ...buildResultOptions({
-        items: allRecentItems,
-        searchTagIds,
-        getTagList,
-        getNavigationParent,
-      }),
     ];
   }
 
-  const options: EuiSelectableTemplateSitewideOption[] = suggestions.map(suggestionToOption);
+  const sections: SearchModalBucketSection[] = [];
 
   for (const bucket of buckets) {
     if (bucket.items.length === 0) {
@@ -108,18 +104,20 @@ export const buildSelectableOptionsFromBuckets = ({
       continue;
     }
 
-    options.push({
-      label: bucketTitles[bucket.id],
-      isGroupLabel: true,
-      className: 'globalSearchBucketHeader',
-      append: hasMoreRecentItems ? (
+    sections.push({
+      id: bucket.id,
+      title: bucketTitles[bucket.id],
+      options: buildResultOptions({
+        items: visibleItems,
+        searchTagIds,
+        getTagList,
+        getNavigationParent,
+      }),
+      headerAction: hasMoreRecentItems ? (
         <RecentBucketMoreButton onClick={onShowAllRecent} />
       ) : undefined,
-      'data-test-subj': `global-search-bucket-${bucket.id}`,
     });
-
-    options.push(...buildResultOptions({ items: visibleItems, searchTagIds, getTagList, getNavigationParent }));
   }
 
-  return options;
+  return sections;
 };

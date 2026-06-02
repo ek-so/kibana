@@ -8,7 +8,6 @@
 import { css } from '@emotion/react';
 import type { UseEuiTheme } from '@elastic/eui';
 import { logicalCSS } from '@elastic/eui';
-
 export const globalSearchBucketHeaderStyles = ({ euiTheme }: UseEuiTheme) => css`
   .globalSearchBucketHeader.euiSelectableListItem {
     display: flex;
@@ -18,22 +17,24 @@ export const globalSearchBucketHeaderStyles = ({ euiTheme }: UseEuiTheme) => css
     min-block-size: auto;
 
     &::before {
-      pointer-events: none;
+      display: none;
     }
   }
 
+  .globalSearchBucketHeader:not(.euiSelectableListItem) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: ${euiTheme.size.xs};
+    box-sizing: border-box;
+    inline-size: 100%;
+  }
+
+  .globalSearchBucketHeader__action,
   .globalSearchBucketHeader__more {
     position: relative;
     z-index: 1;
     flex-shrink: 0;
-  }
-
-  .globalSearchBucketHeader--withMore {
-    justify-content: space-between;
-  }
-
-  .globalSearchBucketHeader__more {
     ${logicalCSS('margin-left', 'auto')}
-    ${logicalCSS('margin-right', `calc(-1 * ${euiTheme.size.xs})`)}
   }
 `;

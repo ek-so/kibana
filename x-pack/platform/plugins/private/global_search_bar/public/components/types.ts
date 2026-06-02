@@ -22,6 +22,12 @@ export const GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX = 52;
 /** Uniform row height for every cell in the project search modal list. */
 export const SEARCH_MODAL_ROW_HEIGHT_PX = 40;
 
+/** Uniform height for every bucket section header in the project search modal. */
+export const SEARCH_MODAL_BUCKET_HEADER_HEIGHT_PX = 40;
+
+/** Height of standalone section divider rows in the search modal list. */
+export const SEARCH_MODAL_DIVIDER_ROW_HEIGHT_PX = 12;
+
 /** Max height of the results list in the search popover. */
 export const GLOBAL_SEARCH_POPOVER_LIST_MAX_HEIGHT_PX = 500;
 

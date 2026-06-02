@@ -12,6 +12,7 @@ import {
 import type { GlobalSearchResult } from '@kbn/global-search-plugin/public';
 import { buildSelectableOptionsFromBuckets } from './build_selectable_options';
 import { getRecentPages } from '../recent/recent_store';
+import { buildModalBucketSections } from './build_modal_bucket_sections';
 
 jest.mock('../recent/recent_store', () => ({
   getRecentPages: jest.fn(),
@@ -71,8 +72,8 @@ describe('buildSelectableOptionsFromBuckets', () => {
     );
 
     expect(recentGroupLabel?.append).toBeTruthy();
+    expect(recentGroupLabel?.className).toBe('globalSearchBucketHeader');
     expect(getSelectableLabels(options)).toEqual(['recent-0', 'recent-1', 'recent-2']);
-    expect(recentGroupLabel?.className).toContain('globalSearchBucketHeader--withMore');
   });
 
   it('limits navigate items to five in the main view', () => {
@@ -95,6 +96,26 @@ describe('buildSelectableOptionsFromBuckets', () => {
     expect(
       options.find((option) => option.isGroupLabel && option.label === 'Navigate')?.append
     ).toBeUndefined();
+  });
+
+  it('builds separate modal bucket sections without group labels in options', () => {
+    const recentItems = Array.from({ length: 2 }, (_, index) => createResult(`recent-${index}`));
+    const navigateItems = Array.from({ length: 2 }, (_, index) => createResult(`nav-${index}`));
+
+    const sections = buildModalBucketSections({
+      buckets: [
+        { id: GLOBAL_SEARCH_BUCKET_RECENT, items: recentItems },
+        { id: GLOBAL_SEARCH_BUCKET_NAVIGATE, items: navigateItems },
+      ],
+      bucketTitles,
+      searchTagIds: [],
+    });
+
+    expect(sections).toHaveLength(2);
+    expect(sections[0].title).toBe('Recent');
+    expect(sections[0].options).toHaveLength(2);
+    expect(sections[0].options.every((option) => !option.isGroupLabel)).toBe(true);
+    expect(sections[1].title).toBe('Navigate');
   });
 
   it('shows all recent items from the recent store in the recent view', () => {
