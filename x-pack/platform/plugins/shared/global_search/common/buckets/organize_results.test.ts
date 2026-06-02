@@ -8,6 +8,7 @@
 import type { GlobalSearchResult } from '../types';
 import { organizeGlobalSearchResults } from './organize_results';
 import {
+  GLOBAL_SEARCH_BUCKET_FAVORITES,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   GLOBAL_SEARCH_BUCKET_RESULTS,
@@ -25,39 +26,44 @@ const createResult = (
 });
 
 describe('organizeGlobalSearchResults', () => {
-  it('places application results in the navigate bucket', () => {
+  it('places favorite items in the favorites bucket when idle', () => {
     const buckets = organizeGlobalSearchResults({
-      results: [createResult({ id: 'discover', type: 'application', title: 'Discover' })],
+      results: [],
       recent: [],
+      favorites: [createResult({ id: 'dash-1', type: 'dashboard', title: 'My Dashboard' })],
       term: '',
     });
 
-    expect(buckets.map((b) => b.id)).toEqual([GLOBAL_SEARCH_BUCKET_NAVIGATE]);
-    expect(buckets[0].items.map((i) => i.title)).toEqual(['Discover']);
+    expect(buckets.map((b) => b.id)).toEqual([GLOBAL_SEARCH_BUCKET_FAVORITES]);
+    expect(buckets[0].items.map((i) => i.title)).toEqual(['My Dashboard']);
   });
 
-  it('shows recent before navigate and omits duplicate urls from navigate', () => {
+  it('shows recent before favorites and keeps starred items in favorites', () => {
     const recentItem = createResult({
-      id: 'discover',
-      type: 'application',
-      title: 'Discover',
-      url: '/app/discover',
+      id: 'dash-recent',
+      type: 'dashboard',
+      title: 'Recent Dashboard',
+      url: '/app/dashboards#/view/recent',
+    });
+    const favoriteItem = createResult({
+      id: 'dash-fav',
+      type: 'dashboard',
+      title: 'Favorite Dashboard',
+      url: '/app/dashboards#/view/fav',
     });
 
     const buckets = organizeGlobalSearchResults({
-      results: [
-        recentItem,
-        createResult({ id: 'dashboards', type: 'application', title: 'Dashboards', url: '/app/dashboards' }),
-      ],
+      results: [],
       recent: [recentItem],
+      favorites: [recentItem, favoriteItem],
       term: '',
     });
 
     expect(buckets.map((b) => b.id)).toEqual([
       GLOBAL_SEARCH_BUCKET_RECENT,
-      GLOBAL_SEARCH_BUCKET_NAVIGATE,
+      GLOBAL_SEARCH_BUCKET_FAVORITES,
     ]);
-    expect(buckets[1].items.map((i) => i.title)).toEqual(['Dashboards']);
+    expect(buckets[1].items.map((i) => i.title)).toEqual(['Recent Dashboard', 'Favorite Dashboard']);
   });
 
   it('splits search hits into navigate and results buckets', () => {
@@ -103,23 +109,11 @@ describe('organizeGlobalSearchResults', () => {
         }),
       ],
       recent: [recentDashboard],
+      favorites: [recentDashboard],
       term: 'dash',
     });
 
     expect(buckets.map((b) => b.id)).toEqual([GLOBAL_SEARCH_BUCKET_NAVIGATE]);
     expect(buckets[0].items.map((i) => i.title)).toEqual(['Dashboards']);
-  });
-
-  it('sorts navigate alphabetically when the term is empty', () => {
-    const buckets = organizeGlobalSearchResults({
-      results: [
-        createResult({ id: 'z', type: 'application', title: 'Zebra' }),
-        createResult({ id: 'a', type: 'application', title: 'Alpha' }),
-      ],
-      recent: [],
-      term: '',
-    });
-
-    expect(buckets[0].items.map((i) => i.title)).toEqual(['Alpha', 'Zebra']);
   });
 });

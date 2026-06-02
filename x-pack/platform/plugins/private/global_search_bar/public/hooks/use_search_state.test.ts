@@ -53,6 +53,12 @@ jest.mock('../recent/recent_store', () => ({
   recordRecentPage: (...args: unknown[]) => mockRecordRecentPage(...args),
 }));
 
+const mockLoadFavoriteDashboardResults = jest.fn().mockResolvedValue([]);
+
+jest.mock('../favorites/load_favorite_dashboards', () => ({
+  loadFavoriteDashboardResults: (...args: unknown[]) => mockLoadFavoriteDashboardResults(...args),
+}));
+
 const getSelectableLabels = (options: Array<{ label?: string; isGroupLabel?: boolean }>) =>
   options.filter((option) => !option.isGroupLabel).map((option) => option.label);
 
@@ -98,6 +104,7 @@ describe('useSearchState', () => {
     jest.useFakeTimers({ legacyFakeTimers: true });
     jest.clearAllMocks();
     mockGetRecentPages.mockReturnValue([]);
+    mockLoadFavoriteDashboardResults.mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -114,13 +121,15 @@ describe('useSearchState', () => {
 
     const navigateToUrl = jest.fn();
     const navigateToApp = jest.fn();
+    const http = { post: jest.fn() } as any;
+    const userProfile = { getEnabled$: jest.fn(() => of(true)) } as any;
     const reportEvent = {
       searchRequest: jest.fn(),
       navigateToApplication: jest.fn(),
       navigateToSavedObject: jest.fn(),
     } as any;
 
-    return { globalSearch, navigateToUrl, navigateToApp, reportEvent };
+    return { globalSearch, navigateToUrl, navigateToApp, http, userProfile, reportEvent };
   };
 
   const triggerInitialLoadAndRunDebounce = async (result: { current: any }) => {

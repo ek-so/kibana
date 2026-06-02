@@ -31,6 +31,10 @@ jest.mock(
 
 jest.mock('@elastic/apm-rum');
 
+jest.mock('../favorites/load_favorite_dashboards', () => ({
+  loadFavoriteDashboardResults: jest.fn().mockResolvedValue([]),
+}));
+
 type Result = { id: string; type: string } | string;
 
 const createResult = (result: Result): GlobalSearchResult => {
@@ -124,6 +128,8 @@ describe('SearchBar', () => {
             globalSearch={{ ...searchService, searchCharLimit }}
             navigateToUrl={applications.navigateToUrl}
             navigateToApp={applications.navigateToApp}
+            http={core.http}
+            userProfile={core.userProfile}
             basePathUrl={basePathUrl}
             chromeStyle$={chromeStyle$}
             reportEvent={eventReporter}
@@ -147,6 +153,8 @@ describe('SearchBar', () => {
             globalSearch={{ ...searchService, searchCharLimit }}
             navigateToUrl={applications.navigateToUrl}
             navigateToApp={applications.navigateToApp}
+            http={core.http}
+            userProfile={core.userProfile}
             basePathUrl={basePathUrl}
             chromeStyle$={chromeStyle$}
             reportEvent={eventReporter}
@@ -175,6 +183,8 @@ describe('SearchBar', () => {
             globalSearch={{ ...searchService, searchCharLimit }}
             navigateToUrl={applications.navigateToUrl}
             navigateToApp={applications.navigateToApp}
+            http={core.http}
+            userProfile={core.userProfile}
             basePathUrl={basePathUrl}
             chromeStyle$={chromeStyle$}
             reportEvent={eventReporter}
@@ -211,6 +221,8 @@ describe('SearchBar', () => {
             globalSearch={{ ...searchService, searchCharLimit }}
             navigateToUrl={applications.navigateToUrl}
             navigateToApp={applications.navigateToApp}
+            http={core.http}
+            userProfile={core.userProfile}
             basePathUrl={basePathUrl}
             chromeStyle$={chromeStyle$}
             reportEvent={eventReporter}
@@ -248,6 +260,8 @@ describe('SearchBar', () => {
             globalSearch={{ ...searchService, searchCharLimit }}
             navigateToUrl={applications.navigateToUrl}
             navigateToApp={applications.navigateToApp}
+            http={core.http}
+            userProfile={core.userProfile}
             basePathUrl={basePathUrl}
             chromeStyle$={chromeStyle$}
             reportEvent={eventReporter}

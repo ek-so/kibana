@@ -17,7 +17,8 @@
     "@kbn/core-chrome-browser-internal",
     "@kbn/config-schema",
     "@kbn/shared-ux-utility",
-    "@kbn/react-kibana-mount"
+    "@kbn/react-kibana-mount",
+    "@kbn/content-management-favorites-public"
   ],
   "exclude": [
     "target/**/*",

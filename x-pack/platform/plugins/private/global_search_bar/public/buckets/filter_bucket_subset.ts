@@ -17,6 +17,12 @@ export const filterRecentPagesByTerm = (
 ): GlobalSearchResult[] =>
   items.filter((item) => matchesBucketSubsetSearchTerm(item.title, term));
 
+export const filterFavoritesByTerm = (
+  items: GlobalSearchResult[],
+  term: string
+): GlobalSearchResult[] =>
+  items.filter((item) => matchesBucketSubsetSearchTerm(item.title, term));
+
 export const filterActionsByTerm = (
   actions: GlobalSearchAction[],
   term: string

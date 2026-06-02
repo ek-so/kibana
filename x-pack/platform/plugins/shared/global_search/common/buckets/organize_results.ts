@@ -7,6 +7,7 @@
 
 import type { GlobalSearchResult } from '../types';
 import {
+  GLOBAL_SEARCH_BUCKET_FAVORITES,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   GLOBAL_SEARCH_BUCKET_RESULTS,
@@ -20,31 +21,16 @@ const sortByScore = (a: GlobalSearchResult, b: GlobalSearchResult): number => {
   return 0;
 };
 
-const sortByTitle = (a: GlobalSearchResult, b: GlobalSearchResult): number => {
-  const titleA = a.title.toUpperCase();
-  const titleB = b.title.toUpperCase();
-  if (titleA < titleB) return -1;
-  if (titleA > titleB) return 1;
-  return 0;
-};
-
-const dedupeNavigateFromRecent = (
-  navigateItems: GlobalSearchResult[],
-  recent: GlobalSearchResult[]
-): GlobalSearchResult[] => {
-  const recentUrls = new Set(recent.map((item) => item.url));
-  return navigateItems.filter((item) => !recentUrls.has(item.url));
-};
-
 /**
- * Assigns flat provider results into Navigate / Recent / Results buckets for display.
+ * Assigns flat provider results into buckets for display.
  *
- * When the query is empty, shows Recent and Navigate (applications). When the user is
+ * When the query is empty, shows Recent and Favorite (starred items). When the user is
  * searching, shows Navigate (applications) and Results (other types) only.
  */
 export const organizeGlobalSearchResults = ({
   results,
   recent,
+  favorites = [],
   term,
 }: OrganizeGlobalSearchResultsParams): GlobalSearchBucket[] => {
   const isEmptyTerm = term.length === 0;
@@ -71,18 +57,16 @@ export const organizeGlobalSearchResults = ({
     return buckets;
   }
 
-  const navigateItems = results.filter(({ type }) => type === 'application');
   const buckets: GlobalSearchBucket[] = [];
 
   if (recent.length > 0) {
     buckets.push({ id: GLOBAL_SEARCH_BUCKET_RECENT, items: recent });
   }
 
-  const navigateDeduped = dedupeNavigateFromRecent(navigateItems, recent);
-  if (navigateDeduped.length > 0) {
+  if (favorites.length > 0) {
     buckets.push({
-      id: GLOBAL_SEARCH_BUCKET_NAVIGATE,
-      items: [...navigateDeduped].sort(sortByTitle),
+      id: GLOBAL_SEARCH_BUCKET_FAVORITES,
+      items: favorites,
     });
   }
 

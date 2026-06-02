@@ -29,8 +29,10 @@ import { CharLimitExceededMessage } from './char_limit_exceeded_message';
 import { useSearchModalStack } from '../hooks/use_search_modal_stack';
 import {
   GLOBAL_SEARCH_MODAL_ACTIONS_SCREEN_ID,
+  GLOBAL_SEARCH_MODAL_FAVORITES_SCREEN_ID,
   GLOBAL_SEARCH_MODAL_RECENT_SCREEN_ID,
   isActionsModalScreen,
+  isFavoritesModalScreen,
   isRecentModalScreen,
 } from '../search_modal/search_modal_stack';
 import { SearchNestedBackPrepend } from './search_nested_back_prepend';
@@ -41,6 +43,8 @@ import type { SearchModalBucketSection } from '../buckets/build_modal_bucket_sec
 export const SearchModalInternal = ({
   globalSearch,
   taggingApi,
+  http,
+  userProfile,
   navigateToUrl,
   navigateToApp,
   reportEvent,
@@ -57,6 +61,7 @@ export const SearchModalInternal = ({
   const setSearchValueRef = useRef<(value: string) => void>(() => {});
   const nestedRecentContext = isNested && isRecentModalScreen(currentScreen.id);
   const nestedActionsContext = isNested && isActionsModalScreen(currentScreen.id);
+  const nestedFavoritesContext = isNested && isFavoritesModalScreen(currentScreen.id);
 
   const {
     searchValue,
@@ -73,6 +78,8 @@ export const SearchModalInternal = ({
   } = useSearchState({
     globalSearch,
     taggingApi,
+    http,
+    userProfile,
     navigateToUrl,
     navigateToApp,
     reportEvent,
@@ -81,6 +88,7 @@ export const SearchModalInternal = ({
     onResultSelect: onClose,
     nestedRecentContext,
     nestedActionsContext,
+    nestedFavoritesContext,
     useModalBucketLayout: true,
     onShowAllRecent: () => {
       pushScreen(
@@ -96,6 +104,13 @@ export const SearchModalInternal = ({
       );
       setSearchValueRef.current('');
     },
+    onShowAllFavorites: () => {
+      pushScreen(
+        { id: GLOBAL_SEARCH_MODAL_FAVORITES_SCREEN_ID, title: i18nStrings.bucketFavorite },
+        searchValueRef.current
+      );
+      setSearchValueRef.current('');
+    },
   });
 
   searchValueRef.current = searchValue;
@@ -105,6 +120,8 @@ export const SearchModalInternal = ({
     ? i18nStrings.recentNestedPlaceholderText
     : nestedActionsContext
     ? i18nStrings.actionsNestedPlaceholderText
+    : nestedFavoritesContext
+    ? i18nStrings.favoritesNestedPlaceholderText
     : i18nStrings.modalPlaceholderText;
 
   const handleNestedBack = useCallback(() => {

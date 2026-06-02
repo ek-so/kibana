@@ -61,6 +61,8 @@ export class GlobalSearchBarPlugin
       globalSearch: { ...globalSearch, searchCharLimit: this.config.input_max_limit },
       navigateToUrl: application.navigateToUrl,
       navigateToApp: application.navigateToApp,
+      http,
+      userProfile: core.userProfile,
       taggingApi: savedObjectsTagging,
       basePathUrl: http.basePath.prepend('/plugins/globalSearchBar/assets/'),
       reportEvent,

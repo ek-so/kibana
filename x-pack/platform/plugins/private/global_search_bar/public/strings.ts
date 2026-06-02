@@ -14,6 +14,9 @@ export const i18nStrings = {
   bucketNavigate: i18n.translate('xpack.globalSearchBar.searchBar.bucket.navigate', {
     defaultMessage: 'Navigate',
   }),
+  bucketFavorite: i18n.translate('xpack.globalSearchBar.searchBar.bucket.favorite', {
+    defaultMessage: 'Favorite',
+  }),
   bucketResults: i18n.translate('xpack.globalSearchBar.searchBar.bucket.results', {
     defaultMessage: 'Results',
   }),
@@ -28,6 +31,9 @@ export const i18nStrings = {
   }),
   actionsShowAllAriaText: i18n.translate('xpack.globalSearchBar.searchBar.actions.showAllAriaText', {
     defaultMessage: 'Show all actions',
+  }),
+  favoritesShowAllAriaText: i18n.translate('xpack.globalSearchBar.searchBar.favorites.showAllAriaText', {
+    defaultMessage: 'Show all favorite items',
   }),
   recentBackAriaText: i18n.translate('xpack.globalSearchBar.searchBar.recent.backAriaText', {
     defaultMessage: 'Back to search results',
@@ -51,6 +57,12 @@ export const i18nStrings = {
     'xpack.globalSearchBar.searchModal.actionsNestedPlaceholder',
     {
       defaultMessage: 'Find in actions...',
+    }
+  ),
+  favoritesNestedPlaceholderText: i18n.translate(
+    'xpack.globalSearchBar.searchModal.favoritesNestedPlaceholder',
+    {
+      defaultMessage: 'Find in favorites...',
     }
   ),
   popoverButton: i18n.translate('xpack.globalSearchBar.searchBar.mobileSearchButtonAriaLabel', {

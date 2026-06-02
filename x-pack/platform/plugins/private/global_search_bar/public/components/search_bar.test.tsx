@@ -23,6 +23,10 @@ jest.mock(
       children({ height: 600, width: 600 })
 );
 
+jest.mock('../favorites/load_favorite_dashboards', () => ({
+  loadFavoriteDashboardResults: jest.fn().mockResolvedValue([]),
+}));
+
 jest.useFakeTimers({ legacyFakeTimers: true });
 
 describe('SearchBar (UI wiring)', () => {
@@ -53,6 +57,8 @@ describe('SearchBar (UI wiring)', () => {
           globalSearch={{ ...searchService, searchCharLimit: 1000 }}
           navigateToUrl={applications.navigateToUrl}
           navigateToApp={applications.navigateToApp}
+          http={core.http}
+          userProfile={core.userProfile}
           basePathUrl={basePathUrl}
           chromeStyle$={of<ChromeStyle>('classic')}
           reportEvent={eventReporter}
@@ -77,6 +83,8 @@ describe('SearchBar (UI wiring)', () => {
           globalSearch={{ ...searchService, searchCharLimit: 1000 }}
           navigateToUrl={applications.navigateToUrl}
           navigateToApp={applications.navigateToApp}
+          http={core.http}
+          userProfile={core.userProfile}
           basePathUrl={basePathUrl}
           chromeStyle$={of<ChromeStyle>('project')}
           reportEvent={eventReporter}
@@ -102,6 +110,8 @@ describe('SearchBar (UI wiring)', () => {
           globalSearch={{ ...searchService, searchCharLimit: 1000 }}
           navigateToUrl={applications.navigateToUrl}
           navigateToApp={applications.navigateToApp}
+          http={core.http}
+          userProfile={core.userProfile}
           basePathUrl={basePathUrl}
           chromeStyle$={of<ChromeStyle>('project')}
           reportEvent={eventReporter}

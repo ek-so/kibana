@@ -6,7 +6,7 @@
  */
 
 import type { ChromeStyle, NavigationTreeDefinitionUI } from '@kbn/core-chrome-browser';
-import type { ApplicationStart } from '@kbn/core/public';
+import type { ApplicationStart, HttpStart, UserProfileServiceStart } from '@kbn/core/public';
 import type { GlobalSearchPluginStart } from '@kbn/global-search-plugin/public';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import type { Observable } from 'rxjs';
@@ -40,6 +40,8 @@ export interface SearchProps {
   globalSearch: GlobalSearchPluginStart & { searchCharLimit: number };
   navigateToUrl: ApplicationStart['navigateToUrl'];
   navigateToApp: ApplicationStart['navigateToApp'];
+  http: HttpStart;
+  userProfile: UserProfileServiceStart;
   reportEvent: EventReporter;
   taggingApi?: SavedObjectTaggingPluginStart;
   basePathUrl: string;

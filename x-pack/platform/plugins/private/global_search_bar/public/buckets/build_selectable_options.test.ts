@@ -6,6 +6,7 @@
  */
 
 import {
+  GLOBAL_SEARCH_BUCKET_FAVORITES,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
 } from '@kbn/global-search-plugin/public';
@@ -45,6 +46,7 @@ const createResult = (id: string): GlobalSearchResult => ({
 const bucketTitles = {
   recent: 'Recent',
   navigate: 'Navigate',
+  favorites: 'Favorite',
   results: 'Results',
 };
 
@@ -98,14 +100,33 @@ describe('buildSelectableOptionsFromBuckets', () => {
     ).toBeUndefined();
   });
 
+  it('limits favorite items to three in the main modal view and adds a More action', () => {
+    const favoriteItems = Array.from({ length: 5 }, (_, index) => createResult(`favorite-${index}`));
+    const onShowAllFavorites = jest.fn();
+
+    const sections = buildModalBucketSections({
+      buckets: [{ id: GLOBAL_SEARCH_BUCKET_FAVORITES, items: favoriteItems }],
+      bucketTitles,
+      searchTagIds: [],
+      favorites: favoriteItems,
+      onShowAllFavorites,
+    });
+
+    expect(sections[0].title).toBe('Favorite');
+    expect(sections[0].options).toHaveLength(3);
+    expect(sections[0].headerAction).toBeTruthy();
+  });
+
   it('builds separate modal bucket sections without group labels in options', () => {
     const recentItems = Array.from({ length: 2 }, (_, index) => createResult(`recent-${index}`));
-    const navigateItems = Array.from({ length: 2 }, (_, index) => createResult(`nav-${index}`));
+    const favoriteItems = Array.from({ length: 2 }, (_, index) =>
+      createResult(`favorite-${index}`)
+    );
 
     const sections = buildModalBucketSections({
       buckets: [
         { id: GLOBAL_SEARCH_BUCKET_RECENT, items: recentItems },
-        { id: GLOBAL_SEARCH_BUCKET_NAVIGATE, items: navigateItems },
+        { id: GLOBAL_SEARCH_BUCKET_FAVORITES, items: favoriteItems },
       ],
       bucketTitles,
       searchTagIds: [],
@@ -115,7 +136,7 @@ describe('buildSelectableOptionsFromBuckets', () => {
     expect(sections[0].title).toBe('Recent');
     expect(sections[0].options).toHaveLength(2);
     expect(sections[0].options.every((option) => !option.isGroupLabel)).toBe(true);
-    expect(sections[1].title).toBe('Navigate');
+    expect(sections[1].title).toBe('Favorite');
   });
 
   it('shows all recent items from the recent store in the recent view', () => {

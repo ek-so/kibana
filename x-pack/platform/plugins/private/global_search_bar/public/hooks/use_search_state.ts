@@ -24,11 +24,13 @@ import type {
 } from '@kbn/global-search-plugin/public';
 import {
   GLOBAL_SEARCH_BUCKET_ACTIONS,
+  GLOBAL_SEARCH_BUCKET_FAVORITES,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   GLOBAL_SEARCH_BUCKET_RESULTS,
   organizeGlobalSearchResults,
 } from '@kbn/global-search-plugin/public';
+import { loadFavoriteDashboardResults } from '../favorites/load_favorite_dashboards';
 import { getGlobalSearchActionById, getGlobalSearchActions } from '../actions/registry';
 import { GLOBAL_SEARCH_ACTION_OPTION_TYPE } from '../actions/types';
 import useDebounce from 'react-use/lib/useDebounce';
@@ -60,6 +62,7 @@ const UNKNOWN_TAG_ID = '__unknown__';
 const bucketTitles: Record<GlobalSearchBucketId, string> = {
   [GLOBAL_SEARCH_BUCKET_RECENT]: i18nStrings.bucketRecent,
   [GLOBAL_SEARCH_BUCKET_ACTIONS]: i18nStrings.bucketActions,
+  [GLOBAL_SEARCH_BUCKET_FAVORITES]: i18nStrings.bucketFavorite,
   [GLOBAL_SEARCH_BUCKET_NAVIGATE]: i18nStrings.bucketNavigate,
   [GLOBAL_SEARCH_BUCKET_RESULTS]: i18nStrings.bucketResults,
 };
@@ -71,10 +74,14 @@ interface UseSearchStateOptions extends Omit<SearchProps, 'basePathUrl'> {
   onShowAllRecent?: () => void;
   /** When set (e.g. search modal), overrides default in-popover "show all actions" behavior. */
   onShowAllActions?: () => void;
+  /** When set (e.g. search modal), overrides default "show all favorites" behavior. */
+  onShowAllFavorites?: () => void;
   /** Modal nested Recent screen: show all recent items only while the query is empty. */
   nestedRecentContext?: boolean;
   /** Modal nested Actions screen: show all actions only while the query is empty. */
   nestedActionsContext?: boolean;
+  /** Modal nested Favorites screen: show all favorite items with local filtering. */
+  nestedFavoritesContext?: boolean;
   /** Renders each bucket as its own section in the search modal. */
   useModalBucketLayout?: boolean;
 }
@@ -101,6 +108,7 @@ export interface SearchStateResult {
   resultsView: GlobalSearchResultsView;
   showAllRecent: () => void;
   showAllActions: () => void;
+  showAllFavorites: () => void;
   modalBucketSections: SearchModalBucketSection[];
   suggestionOptions: EuiSelectableTemplateSitewideOption[];
 }
@@ -125,14 +133,18 @@ const getSelectableRank = (
 export const useSearchState = ({
   globalSearch,
   taggingApi,
+  http,
+  userProfile,
   navigateToUrl,
   navigateToApp,
   reportEvent,
   onResultSelect,
   onShowAllRecent: onShowAllRecentOverride,
   onShowAllActions: onShowAllActionsOverride,
+  onShowAllFavorites: onShowAllFavoritesOverride,
   nestedRecentContext = false,
   nestedActionsContext = false,
+  nestedFavoritesContext = false,
   useModalBucketLayout = false,
   getNavigation$,
   prependBasePath = (path) => path,
@@ -184,8 +196,12 @@ export const useSearchState = ({
       return 'actions';
     }
 
+    if (nestedFavoritesContext) {
+      return 'favorites';
+    }
+
     return resultsView;
-  }, [nestedActionsContext, nestedRecentContext, resultsView]);
+  }, [nestedActionsContext, nestedFavoritesContext, nestedRecentContext, resultsView]);
 
   const activeResultsViewRef = useRef(activeResultsView);
   activeResultsViewRef.current = activeResultsView;
@@ -200,9 +216,15 @@ export const useSearchState = ({
     showAllActionsRef.current();
   }, []);
 
+  const showAllFavoritesRef = useRef<() => void>(() => {});
+  const stableShowAllFavorites = useCallback(() => {
+    showAllFavoritesRef.current();
+  }, []);
+
   const searchSubscription = useRef<Subscription | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const latestResultsRef = useRef<GlobalSearchResult[]>([]);
+  const favoriteResultsRef = useRef<GlobalSearchResult[]>([]);
   const lastUpdateParamsRef = useRef<{
     results: GlobalSearchResult[];
     suggestions: SearchSuggestion[];
@@ -261,7 +283,8 @@ export const useSearchState = ({
       const buckets = organizeGlobalSearchResults({
         results,
         recent,
-        term: view === 'recent' || view === 'actions' ? '' : term,
+        favorites: favoriteResultsRef.current,
+        term: view === 'recent' || view === 'actions' || view === 'favorites' ? '' : term,
       });
 
       if (useModalBucketLayout) {
@@ -276,7 +299,9 @@ export const useSearchState = ({
             view,
             onShowAllRecent: stableShowAllRecent,
             onShowAllActions: stableShowAllActions,
+            onShowAllFavorites: stableShowAllFavorites,
             actions: getGlobalSearchActions(),
+            favorites: favoriteResultsRef.current,
             term,
           })
         );
@@ -302,8 +327,55 @@ export const useSearchState = ({
         })
       );
     },
-    [taggingApi, stableShowAllRecent, stableShowAllActions, getNavigationParent, useModalBucketLayout]
+    [
+      taggingApi,
+      stableShowAllRecent,
+      stableShowAllActions,
+      stableShowAllFavorites,
+      getNavigationParent,
+      useModalBucketLayout,
+    ]
   );
+
+  const updateOptionsRef = useRef(updateOptions);
+  updateOptionsRef.current = updateOptions;
+
+  useEffect(() => {
+    if (!initialLoad) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadFavorites = async () => {
+      try {
+        const favorites = await loadFavoriteDashboardResults({ http, userProfile });
+
+        if (cancelled) {
+          return;
+        }
+
+        favoriteResultsRef.current = favorites;
+
+        const params = lastUpdateParamsRef.current;
+        updateOptionsRef.current(
+          params?.results ?? latestResultsRef.current,
+          params?.suggestions ?? [],
+          params?.searchTagIds ?? [],
+          params?.term ?? '',
+          activeResultsViewRef.current
+        );
+      } catch {
+        // Favorites are optional; keep search usable if the request fails.
+      }
+    };
+
+    loadFavorites();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [http, initialLoad, userProfile]);
 
   useLayoutEffect(() => {
     showAllRecentRef.current = () => {
@@ -367,20 +439,51 @@ export const useSearchState = ({
     };
   }, [onShowAllActionsOverride, updateOptions]);
 
+  useLayoutEffect(() => {
+    showAllFavoritesRef.current = () => {
+      if (onShowAllFavoritesOverride) {
+        searchSubscription.current?.unsubscribe();
+        searchSubscription.current = null;
+
+        onShowAllFavoritesOverride();
+
+        const params = lastUpdateParamsRef.current;
+        if (params) {
+          updateOptions(params.results, params.suggestions, params.searchTagIds, '', 'favorites');
+        } else {
+          updateOptions(latestResultsRef.current, [], [], '', 'favorites');
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      setResultsView('favorites');
+      setIsLoading(false);
+
+      const params = lastUpdateParamsRef.current;
+      if (params) {
+        updateOptions(params.results, params.suggestions, params.searchTagIds, '', 'favorites');
+        return;
+      }
+
+      updateOptions(latestResultsRef.current, [], [], '', 'favorites');
+    };
+  }, [onShowAllFavoritesOverride, updateOptions]);
+
   useEffect(() => {
     const params = lastUpdateParamsRef.current;
     if (!params || !initialLoad) {
       return;
     }
 
-    updateOptions(
+    updateOptionsRef.current(
       params.results,
       params.suggestions,
       params.searchTagIds,
       params.term,
       activeResultsView
     );
-  }, [activeResultsView, updateOptions, initialLoad]);
+  }, [activeResultsView, initialLoad]);
 
   useEffect(() => {
     const params = lastUpdateParamsRef.current;
@@ -388,14 +491,14 @@ export const useSearchState = ({
       return;
     }
 
-    updateOptions(
+    updateOptionsRef.current(
       params.results,
       params.suggestions,
       params.searchTagIds,
       params.term,
       activeResultsView
     );
-  }, [navigationTree, updateOptions, initialLoad, activeResultsView]);
+  }, [navigationTree, initialLoad, activeResultsView]);
 
   const triggerInitialLoad = useCallback(() => {
     setResultsView('main');
@@ -411,7 +514,8 @@ export const useSearchState = ({
       if (initialLoad) {
         const subsetView =
           activeResultsViewRef.current === 'recent' ||
-          activeResultsViewRef.current === 'actions';
+          activeResultsViewRef.current === 'actions' ||
+          activeResultsViewRef.current === 'favorites';
 
         if (subsetView) {
           searchSubscription.current?.unsubscribe();
@@ -755,6 +859,7 @@ export const useSearchState = ({
     resultsView,
     showAllRecent: stableShowAllRecent,
     showAllActions: stableShowAllActions,
+    showAllFavorites: stableShowAllFavorites,
     modalBucketSections,
     suggestionOptions,
   };

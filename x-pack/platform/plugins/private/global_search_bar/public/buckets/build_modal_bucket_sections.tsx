@@ -10,16 +10,20 @@ import type { ReactNode } from 'react';
 import React from 'react';
 import {
   GLOBAL_SEARCH_BUCKET_ACTIONS,
+  GLOBAL_SEARCH_BUCKET_FAVORITES,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   type GlobalSearchBucket,
   type GlobalSearchBucketId,
+  type GlobalSearchResult,
 } from '@kbn/global-search-plugin/public';
 import type { NavigationParentContext } from '@kbn/core-chrome-browser';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import { resultToOption } from '../lib';
 import { getRecentPages, RECENT_ITEMS_MAIN_LIMIT } from '../recent/recent_store';
-import { filterRecentPagesByTerm } from './filter_bucket_subset';
+import { FAVORITES_ITEMS_MAIN_LIMIT } from '../favorites/constants';
+import { FavoritesBucketMoreButton } from '../favorites/favorites_bucket_header_actions';
+import { filterFavoritesByTerm, filterRecentPagesByTerm } from './filter_bucket_subset';
 import { RecentBucketMoreButton } from './recent_bucket_header_actions';
 import type { GlobalSearchResultsView } from './build_selectable_options';
 import { NAVIGATE_ITEMS_MAIN_LIMIT } from './build_selectable_options';
@@ -59,7 +63,9 @@ export const buildModalBucketSections = ({
   view = 'main',
   onShowAllRecent,
   onShowAllActions,
+  onShowAllFavorites,
   actions = [],
+  favorites = [],
   term = '',
 }: {
   buckets: GlobalSearchBucket[];
@@ -70,7 +76,9 @@ export const buildModalBucketSections = ({
   view?: GlobalSearchResultsView;
   onShowAllRecent?: () => void;
   onShowAllActions?: () => void;
+  onShowAllFavorites?: () => void;
   actions?: GlobalSearchAction[];
+  favorites?: GlobalSearchResult[];
   term?: string;
 }): SearchModalBucketSection[] => {
   if (view === 'actions') {
@@ -105,6 +113,27 @@ export const buildModalBucketSections = ({
     ];
   }
 
+  if (view === 'favorites') {
+    const allFavoriteItems = filterFavoritesByTerm(favorites, term);
+
+    if (allFavoriteItems.length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        id: GLOBAL_SEARCH_BUCKET_FAVORITES,
+        title: bucketTitles[GLOBAL_SEARCH_BUCKET_FAVORITES],
+        options: buildResultOptions({
+          items: allFavoriteItems,
+          searchTagIds,
+          getTagList,
+          getNavigationParent,
+        }),
+      },
+    ];
+  }
+
   const sections: SearchModalBucketSection[] = [];
 
   for (const bucket of buckets) {
@@ -113,14 +142,21 @@ export const buildModalBucketSections = ({
     }
 
     const isRecentBucket = bucket.id === GLOBAL_SEARCH_BUCKET_RECENT;
+    const isFavoritesBucket = bucket.id === GLOBAL_SEARCH_BUCKET_FAVORITES;
     const isNavigateBucket = bucket.id === GLOBAL_SEARCH_BUCKET_NAVIGATE;
     const visibleItems = isRecentBucket
       ? bucket.items.slice(0, RECENT_ITEMS_MAIN_LIMIT)
+      : isFavoritesBucket
+      ? bucket.items.slice(0, FAVORITES_ITEMS_MAIN_LIMIT)
       : isNavigateBucket
       ? bucket.items.slice(0, NAVIGATE_ITEMS_MAIN_LIMIT)
       : bucket.items;
     const hasMoreRecentItems =
       isRecentBucket && bucket.items.length > RECENT_ITEMS_MAIN_LIMIT && onShowAllRecent;
+    const hasMoreFavoriteItems =
+      isFavoritesBucket &&
+      bucket.items.length > FAVORITES_ITEMS_MAIN_LIMIT &&
+      onShowAllFavorites;
 
     if (visibleItems.length === 0) {
       continue;
@@ -137,6 +173,8 @@ export const buildModalBucketSections = ({
       }),
       headerAction: hasMoreRecentItems ? (
         <RecentBucketMoreButton onClick={onShowAllRecent} />
+      ) : hasMoreFavoriteItems ? (
+        <FavoritesBucketMoreButton onClick={onShowAllFavorites} />
       ) : undefined,
     });
   }

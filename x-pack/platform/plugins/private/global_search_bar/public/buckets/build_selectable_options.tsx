@@ -23,7 +23,7 @@ import { RecentBucketMoreButton } from './recent_bucket_header_actions';
 import type { GlobalSearchAction } from '../actions/types';
 import { insertActionsSelectableOptions } from './insert_actions_bucket_sections';
 
-export type GlobalSearchResultsView = 'main' | 'recent' | 'actions';
+export type GlobalSearchResultsView = 'main' | 'recent' | 'actions' | 'favorites';
 
 /** Maximum navigate items shown in the main search popover. */
 export const NAVIGATE_ITEMS_MAIN_LIMIT = 5;
