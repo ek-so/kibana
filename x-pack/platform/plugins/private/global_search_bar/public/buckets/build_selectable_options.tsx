@@ -8,13 +8,11 @@
 import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
 import {
   GLOBAL_SEARCH_BUCKET_ACTIONS,
-  GLOBAL_SEARCH_BUCKET_FAVORITES,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
   type GlobalSearchBucket,
   type GlobalSearchBucketId,
 } from '@kbn/global-search-plugin/public';
-import type { GlobalSearchResultPrependIconColor } from '../lib/global_search_result_prepend_icon';
 import type { NavigationParentContext } from '@kbn/core-chrome-browser';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import type { SearchSuggestion } from '../suggestions';
@@ -40,16 +38,14 @@ const buildResultOptions = ({
   searchTagIds,
   getTagList,
   getNavigationParent,
-  prependIconColor,
 }: {
   items: GlobalSearchBucket['items'];
   searchTagIds: string[];
   getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList'];
   getNavigationParent?: (url: string) => NavigationParentContext;
-  prependIconColor?: GlobalSearchResultPrependIconColor;
 }): EuiSelectableTemplateSitewideOption[] =>
   items.map((item) => ({
-    ...resultToOption(item, searchTagIds, getTagList, getNavigationParent, prependIconColor),
+    ...resultToOption(item, searchTagIds, getTagList, getNavigationParent),
     'data-test-subj': `nav-search-option`,
   }));
 
@@ -120,7 +116,6 @@ export const buildSelectableOptionsFromBuckets = ({
     }
 
     const isRecentBucket = bucket.id === GLOBAL_SEARCH_BUCKET_RECENT;
-    const isFavoritesBucket = bucket.id === GLOBAL_SEARCH_BUCKET_FAVORITES;
     const isNavigateBucket = bucket.id === GLOBAL_SEARCH_BUCKET_NAVIGATE;
     const visibleItems = isRecentBucket
       ? bucket.items.slice(0, RECENT_ITEMS_MAIN_LIMIT)
@@ -150,7 +145,6 @@ export const buildSelectableOptionsFromBuckets = ({
         searchTagIds,
         getTagList,
         getNavigationParent,
-        prependIconColor: isFavoritesBucket ? 'accent' : undefined,
       })
     );
   }

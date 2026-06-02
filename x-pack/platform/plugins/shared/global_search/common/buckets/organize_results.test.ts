@@ -114,6 +114,40 @@ describe('organizeGlobalSearchResults', () => {
     });
 
     expect(buckets.map((b) => b.id)).toEqual([GLOBAL_SEARCH_BUCKET_NAVIGATE]);
-    expect(buckets[0].items.map((i) => i.title)).toEqual(['Dashboards']);
+    expect(buckets[0].items.map((i) => i.title)).toEqual(['Sales Dashboard', 'Dashboards']);
+  });
+
+  it('merges matching favorites with applications in navigate when searching', () => {
+    const favoriteDashboard = createResult({
+      id: 'dash-fav',
+      type: 'dashboard',
+      title: 'Starred Dashboard',
+      url: '/app/dashboards#/view/fav',
+    });
+
+    const buckets = organizeGlobalSearchResults({
+      results: [
+        createResult({
+          id: 'dashboards',
+          type: 'application',
+          title: 'Dashboards',
+          url: '/app/dashboards',
+          score: 85,
+        }),
+        createResult({
+          id: 'dash-fav',
+          type: 'dashboard',
+          title: 'Starred Dashboard',
+          url: '/app/dashboards#/view/fav',
+          score: 80,
+        }),
+      ],
+      favorites: [favoriteDashboard],
+      term: 'dash',
+    });
+
+    expect(buckets.map((b) => b.id)).toEqual([GLOBAL_SEARCH_BUCKET_NAVIGATE]);
+    expect(buckets[0].items.map((i) => i.title)).toEqual(['Starred Dashboard', 'Dashboards']);
+    expect(buckets[0].items[0].meta?.isFavorite).toBe(true);
   });
 });

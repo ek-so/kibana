@@ -13,10 +13,10 @@ import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-p
 import type { Tag } from '@kbn/saved-objects-tagging-oss-plugin/common';
 import { GlobalSearchResultAppend } from '../components/global_search_result_append';
 import { resolveGlobalSearchPrependIcon } from './global_search_result_icon';
-import {
-  createGlobalSearchResultPrepend,
-  type GlobalSearchResultPrependIconColor,
-} from './global_search_result_prepend_icon';
+import { createGlobalSearchResultPrepend } from './global_search_result_prepend_icon';
+import type { GlobalSearchResultPrependIconColor } from './global_search_result_prepend_icon';
+import { resolveResultPrependIconColor } from './resolve_result_prepend_icon_color';
+import { resolveGlobalSearchResultParentTitle } from './resolve_global_search_result_parent_title';
 
 export const resultToOption = (
   result: GlobalSearchResult,
@@ -28,7 +28,7 @@ export const resultToOption = (
   const { id, title, url, icon, type, meta = {} } = result;
   const { tagIds = [] } = meta as { tagIds: string[] };
   const navigation = getNavigationParent?.(url);
-  const parentTitle = navigation?.title;
+  const parentTitle = resolveGlobalSearchResultParentTitle({ type, navigation });
 
   const prependIconType = resolveGlobalSearchPrependIcon({
     type,
@@ -41,7 +41,10 @@ export const resultToOption = (
     label: title,
     url,
     type,
-    prepend: createGlobalSearchResultPrepend(prependIconType, prependIconColor),
+    prepend: createGlobalSearchResultPrepend(
+      prependIconType,
+      resolveResultPrependIconColor(result, prependIconColor)
+    ),
     'data-test-subj': `nav-search-option`,
   };
 

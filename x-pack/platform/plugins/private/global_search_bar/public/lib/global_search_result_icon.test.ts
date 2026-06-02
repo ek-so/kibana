@@ -21,11 +21,20 @@ describe('resolveGlobalSearchPrependIcon', () => {
     ).toBe('productDiscover');
   });
 
-  it('uses the grid icon for non-integration results outside the navigation menu', () => {
+  it('uses the result icon for saved-object results outside the navigation menu', () => {
     expect(
       resolveGlobalSearchPrependIcon({
         type: 'dashboard',
-        resultIcon: 'dash-icon',
+        resultIcon: 'productDashboard',
+        navigation: { matchedInNavigation: false },
+      })
+    ).toBe('productDashboard');
+  });
+
+  it('falls back to the grid icon for saved-object results without an icon', () => {
+    expect(
+      resolveGlobalSearchPrependIcon({
+        type: 'dashboard',
         navigation: { matchedInNavigation: false },
       })
     ).toBe(GLOBAL_SEARCH_OFF_MENU_ICON);
@@ -39,6 +48,16 @@ describe('resolveGlobalSearchPrependIcon', () => {
         navigation: { matchedInNavigation: false },
       })
     ).toBe(GLOBAL_SEARCH_OFF_MENU_ICON);
+  });
+
+  it('uses the result icon for saved objects matched in navigation without a nav icon', () => {
+    expect(
+      resolveGlobalSearchPrependIcon({
+        type: 'dashboard',
+        resultIcon: 'productDashboard',
+        navigation: { matchedInNavigation: true, title: 'Dashboards' },
+      })
+    ).toBe('productDashboard');
   });
 
   it('keeps integration icons outside the navigation menu', () => {

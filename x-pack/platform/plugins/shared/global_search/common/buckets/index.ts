@@ -6,6 +6,11 @@
  */
 
 export { organizeGlobalSearchResults } from './organize_results';
+export {
+  filterGlobalSearchFavoritesByTerm,
+  isGlobalSearchFavoriteResult,
+  markGlobalSearchFavoriteResult,
+} from './favorite_meta';
 export type { GlobalSearchBucket, GlobalSearchBucketId, OrganizeGlobalSearchResultsParams } from './types';
 export {
   GLOBAL_SEARCH_BUCKET_ACTIONS,

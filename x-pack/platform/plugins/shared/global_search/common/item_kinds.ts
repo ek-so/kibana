@@ -17,3 +17,6 @@ export type GlobalSearchItemKind =
 
 /** Meta key on {@link GlobalSearchResult} for item kind. */
 export const GLOBAL_SEARCH_ITEM_KIND_META_KEY = 'itemKind';
+
+/** Meta key marking a result as a user-starred favorite (accent icon in search UI). */
+export const GLOBAL_SEARCH_FAVORITE_META_KEY = 'isFavorite';

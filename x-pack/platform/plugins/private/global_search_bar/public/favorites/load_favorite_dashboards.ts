@@ -7,10 +7,13 @@
 
 import type { HttpStart, UserProfileServiceStart } from '@kbn/core/public';
 import { FavoritesClient } from '@kbn/content-management-favorites-public';
-import type { GlobalSearchResult } from '@kbn/global-search-plugin/public';
+import {
+  markGlobalSearchFavoriteResult,
+  type GlobalSearchResult,
+} from '@kbn/global-search-plugin/public';
+import { DASHBOARD_RESULT_ICON, DASHBOARD_SAVED_OBJECT_TYPE } from '../lib/dashboards_app';
 
 const DASHBOARD_APP_ID = 'dashboards';
-const DASHBOARD_SAVED_OBJECT_TYPE = 'dashboard';
 
 interface BulkGetSavedObjectResponse {
   id: string;
@@ -24,18 +27,19 @@ interface BulkGetSavedObjectResponse {
   };
 }
 
-const mapDashboardToSearchResult = (object: BulkGetSavedObjectResponse): GlobalSearchResult => ({
-  id: object.id,
-  title: object.attributes.title ?? object.id,
-  type: DASHBOARD_SAVED_OBJECT_TYPE,
-  url: `/app/dashboards#/view/${encodeURIComponent(object.id)}`,
-  icon: 'dashboardApp',
-  score: 100,
-  meta: {
-    tagIds: object.references?.filter((ref) => ref.type === 'tag').map((ref) => ref.id) ?? [],
-    displayName: DASHBOARD_SAVED_OBJECT_TYPE,
-  },
-});
+const mapDashboardToSearchResult = (object: BulkGetSavedObjectResponse): GlobalSearchResult =>
+  markGlobalSearchFavoriteResult({
+    id: object.id,
+    title: object.attributes.title ?? object.id,
+    type: DASHBOARD_SAVED_OBJECT_TYPE,
+    url: `/app/dashboards#/view/${encodeURIComponent(object.id)}`,
+    icon: DASHBOARD_RESULT_ICON,
+    score: 100,
+    meta: {
+      tagIds: object.references?.filter((ref) => ref.type === 'tag').map((ref) => ref.id) ?? [],
+      displayName: DASHBOARD_SAVED_OBJECT_TYPE,
+    },
+  });
 
 export const loadFavoriteDashboardResults = async ({
   http,

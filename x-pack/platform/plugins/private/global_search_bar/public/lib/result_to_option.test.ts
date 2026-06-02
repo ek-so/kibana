@@ -8,6 +8,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import type { GlobalSearchResult } from '@kbn/global-search-plugin/common/types';
+import { GLOBAL_SEARCH_FAVORITE_META_KEY } from '@kbn/global-search-plugin/public';
 import type { Tag } from '@kbn/saved-objects-tagging-oss-plugin/common';
 import { resultToOption } from './result_to_option';
 
@@ -72,11 +73,11 @@ describe('resultToOption', () => {
     expect(getPrependIconType(option.prepend)).toBe('connector-icon');
   });
 
-  it('uses a grid icon for items not in the navigation menu', () => {
-    const input = createSearchResult({ type: 'dashboard', icon: 'dash-icon' });
+  it('uses the result icon for dashboard items not in the navigation menu', () => {
+    const input = createSearchResult({ type: 'dashboard', icon: 'productDashboard' });
     const option = resultToOption(input, [], undefined, () => ({ matchedInNavigation: false }));
 
-    expect(getPrependIconType(option.prepend)).toBe('grid');
+    expect(getPrependIconType(option.prepend)).toBe('productDashboard');
   });
 
   it('keeps the integration icon when not in the navigation menu', () => {
@@ -118,6 +119,7 @@ describe('resultToOption', () => {
     );
     expect(option.append).toMatchInlineSnapshot(`
       <GlobalSearchResultAppend
+        parentTitle="Dashboards"
         searchTagIds={Array []}
         tags={
           Array [
@@ -198,5 +200,37 @@ describe('resultToOption', () => {
     const option = resultToOption(input, []);
 
     expect(option.prepend).toBeUndefined();
+  });
+
+  it('shows Dashboards as the append parent for dashboard results without a nav parent title', () => {
+    const input = createSearchResult({
+      type: 'dashboard',
+      url: '/app/dashboards#/view/abc',
+      icon: 'productDashboard',
+    });
+    const option = resultToOption(input, [], undefined, () => ({
+      matchedInNavigation: false,
+    }));
+
+    expect(option.append).toMatchInlineSnapshot(`
+      <GlobalSearchResultAppend
+        parentTitle="Dashboards"
+        searchTagIds={Array []}
+        tags={Array []}
+      />
+    `);
+  });
+
+  it('uses accent prepend styling for favorite results', () => {
+    const input = createSearchResult({
+      icon: 'productDashboard',
+      meta: { [GLOBAL_SEARCH_FAVORITE_META_KEY]: true },
+    });
+    const option = resultToOption(input, []);
+    const { getByTestId } = render(React.createElement(React.Fragment, null, option.prepend));
+
+    expect(getByTestId('globalSearchResultPrependIcon')).toHaveStyle({
+      backgroundColor: 'var(--euiColorBackgroundLightAccent)',
+    });
   });
 });

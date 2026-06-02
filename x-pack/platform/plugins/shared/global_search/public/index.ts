@@ -28,6 +28,9 @@ export type {
 } from '../common/types';
 export {
   organizeGlobalSearchResults,
+  filterGlobalSearchFavoritesByTerm,
+  isGlobalSearchFavoriteResult,
+  markGlobalSearchFavoriteResult,
   GLOBAL_SEARCH_BUCKET_ACTIONS,
   GLOBAL_SEARCH_BUCKET_FAVORITES,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
@@ -39,6 +42,7 @@ export {
   GLOBAL_SEARCH_ITEM_KIND_ACTION,
   GLOBAL_SEARCH_ITEM_KIND_META_KEY,
   GLOBAL_SEARCH_ITEM_KIND_PAGE,
+  GLOBAL_SEARCH_FAVORITE_META_KEY,
 } from '../common/item_kinds';
 export type { GlobalSearchItemKind } from '../common/item_kinds';
 export type {

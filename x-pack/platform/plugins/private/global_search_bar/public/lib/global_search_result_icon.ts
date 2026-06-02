@@ -35,11 +35,29 @@ export const resolveGlobalSearchPrependIcon = ({
     return navigation.icon;
   }
 
-  if (navigation?.matchedInNavigation === false && !isIntegrationType(type)) {
+  if (navigation?.matchedInNavigation === false) {
+    if (isIntegrationType(type)) {
+      return resultIcon ?? GLOBAL_SEARCH_OFF_MENU_ICON;
+    }
+
+    // Applications outside the nav tree use a neutral icon so solution logos are not misleading.
+    if (type === 'application') {
+      return GLOBAL_SEARCH_OFF_MENU_ICON;
+    }
+
+    // Saved objects and other in-app pages (e.g. favorited dashboards) keep their type icon.
+    if (resultIcon) {
+      return resultIcon;
+    }
+
     return GLOBAL_SEARCH_OFF_MENU_ICON;
   }
 
   if (usesResultProviderIcon(type) && resultIcon) {
+    return resultIcon;
+  }
+
+  if (resultIcon) {
     return resultIcon;
   }
 

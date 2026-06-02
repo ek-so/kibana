@@ -20,7 +20,6 @@ import {
 import type { NavigationParentContext } from '@kbn/core-chrome-browser';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import { resultToOption } from '../lib';
-import type { GlobalSearchResultPrependIconColor } from '../lib/global_search_result_prepend_icon';
 import { getRecentPages, RECENT_ITEMS_MAIN_LIMIT } from '../recent/recent_store';
 import { FAVORITES_ITEMS_MAIN_LIMIT } from '../favorites/constants';
 import { FavoritesBucketMoreButton } from '../favorites/favorites_bucket_header_actions';
@@ -44,16 +43,14 @@ const buildResultOptions = ({
   searchTagIds,
   getTagList,
   getNavigationParent,
-  prependIconColor,
 }: {
   items: GlobalSearchBucket['items'];
   searchTagIds: string[];
   getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList'];
   getNavigationParent?: (url: string) => NavigationParentContext;
-  prependIconColor?: GlobalSearchResultPrependIconColor;
 }): EuiSelectableTemplateSitewideOption[] =>
   items.map((item) => ({
-    ...resultToOption(item, searchTagIds, getTagList, getNavigationParent, prependIconColor),
+    ...resultToOption(item, searchTagIds, getTagList, getNavigationParent),
     'data-test-subj': 'nav-search-option',
   }));
 
@@ -132,7 +129,6 @@ export const buildModalBucketSections = ({
           searchTagIds,
           getTagList,
           getNavigationParent,
-          prependIconColor: 'accent',
         }),
       },
     ];
@@ -174,7 +170,6 @@ export const buildModalBucketSections = ({
         searchTagIds,
         getTagList,
         getNavigationParent,
-        prependIconColor: isFavoritesBucket ? 'accent' : undefined,
       }),
       headerAction: hasMoreRecentItems ? (
         <RecentBucketMoreButton onClick={onShowAllRecent} />

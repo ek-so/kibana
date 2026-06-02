@@ -7,6 +7,10 @@
 
 import type { GlobalSearchResult } from '../types';
 import {
+  filterGlobalSearchFavoritesByTerm,
+  markGlobalSearchFavoriteResult,
+} from './favorite_meta';
+import {
   GLOBAL_SEARCH_BUCKET_FAVORITES,
   GLOBAL_SEARCH_BUCKET_NAVIGATE,
   GLOBAL_SEARCH_BUCKET_RECENT,
@@ -25,7 +29,8 @@ const sortByScore = (a: GlobalSearchResult, b: GlobalSearchResult): number => {
  * Assigns flat provider results into buckets for display.
  *
  * When the query is empty, shows Recent and Favorite (starred items). When the user is
- * searching, shows Navigate (applications) and Results (other types) only.
+ * searching, shows Navigate (matching favorites and applications), Results (other types),
+ * and Actions separately in the UI layer.
  */
 export const organizeGlobalSearchResults = ({
   results,
@@ -37,13 +42,32 @@ export const organizeGlobalSearchResults = ({
 
   if (!isEmptyTerm) {
     const buckets: GlobalSearchBucket[] = [];
-    const navigateItems = results.filter(({ type }) => type === 'application');
-    const resultItems = results.filter(({ type }) => type !== 'application');
+    const matchingFavorites = filterGlobalSearchFavoritesByTerm(favorites, term).map(
+      markGlobalSearchFavoriteResult
+    );
+    const favoriteUrls = new Set(matchingFavorites.map((item) => item.url));
+    const favoriteIds = new Set(matchingFavorites.map((item) => item.id));
+
+    const navigateApplications = results
+      .filter(({ type }) => type === 'application')
+      .filter((item) => !favoriteUrls.has(item.url));
+
+    const navigateItems = [
+      ...matchingFavorites,
+      ...[...navigateApplications].sort(sortByScore),
+    ];
+
+    const resultItems = results
+      .filter(({ type }) => type !== 'application')
+      .filter(
+        (item) =>
+          !favoriteUrls.has(item.url) && !(item.type === 'dashboard' && favoriteIds.has(item.id))
+      );
 
     if (navigateItems.length > 0) {
       buckets.push({
         id: GLOBAL_SEARCH_BUCKET_NAVIGATE,
-        items: [...navigateItems].sort(sortByScore),
+        items: navigateItems,
       });
     }
 
@@ -66,7 +90,7 @@ export const organizeGlobalSearchResults = ({
   if (favorites.length > 0) {
     buckets.push({
       id: GLOBAL_SEARCH_BUCKET_FAVORITES,
-      items: favorites,
+      items: favorites.map(markGlobalSearchFavoriteResult),
     });
   }
 
