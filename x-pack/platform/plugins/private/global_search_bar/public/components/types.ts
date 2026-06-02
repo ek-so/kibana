@@ -13,8 +13,9 @@ import type { Observable } from 'rxjs';
 import type { EventReporter } from '../telemetry';
 
 export const SEARCH_MODAL_SELECTOR_PREFIX = 'chromeProjectNextSearchModal';
-export const SEARCH_MODAL_HEIGHT_VH = 50;
+export const SEARCH_MODAL_HEIGHT_PX = 560;
 export const SEARCH_MODAL_WIDTH_PX = 800;
+export const SEARCH_MODAL_PADDING_PX = 8;
 /** Row height for virtualized global search lists (EuiSelectableTemplateSitewide default). */
 export const GLOBAL_SEARCH_LIST_ROW_HEIGHT_PX = 40;
 
@@ -41,6 +42,7 @@ export interface SearchProps {
 /* @internal */
 export interface SearchBarProps extends SearchProps {
   chromeStyle$: Observable<ChromeStyle>;
+  onOpenSearchModal?: () => void;
 }
 
 /* @internal */

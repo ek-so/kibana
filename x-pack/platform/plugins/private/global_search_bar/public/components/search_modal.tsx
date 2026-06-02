@@ -12,7 +12,7 @@ import { EuiLoadingSpinner, EuiFlexGroup, EuiFlexItem, useEuiBreakpoint } from '
 import type { SearchModalProps } from './types';
 import {
   SEARCH_MODAL_SELECTOR_PREFIX,
-  SEARCH_MODAL_HEIGHT_VH,
+  SEARCH_MODAL_HEIGHT_PX,
   SEARCH_MODAL_WIDTH_PX,
 } from './types';
 
@@ -34,11 +34,13 @@ export const SearchModal = (props: SearchModalProps) => {
 
   const modalOverlayStyles = css`
     .${SEARCH_MODAL_SELECTOR_PREFIX} {
+      .euiModal__closeIcon {
+        display: none;
+      }
+
+      block-size: ${SEARCH_MODAL_HEIGHT_PX}px;
+
       ${mediumAndUpBreakpoint} {
-        .euiModal__closeIcon {
-          display: none;
-        }
-        block-size: ${SEARCH_MODAL_HEIGHT_VH}vh;
         inline-size: ${SEARCH_MODAL_WIDTH_PX}px;
       }
     }

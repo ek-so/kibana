@@ -9,6 +9,13 @@ import { css } from '@emotion/react';
 import type { UseEuiTheme } from '@elastic/eui';
 import { globalSearchBucketHeaderStyles } from '../buckets/bucket_header_styles';
 
+const APPEND_OFFSET_PX = 4;
+
 export const globalSearchSelectableListStyles = (euiThemeContext: UseEuiTheme) => css`
   ${globalSearchBucketHeaderStyles(euiThemeContext)}
+
+  .euiSelectableListItem__append {
+    margin-inline-start: -${APPEND_OFFSET_PX}px;
+    padding-inline-end: ${APPEND_OFFSET_PX}px;
+  }
 `;

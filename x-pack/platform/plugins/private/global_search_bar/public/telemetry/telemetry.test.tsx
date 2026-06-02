@@ -274,7 +274,9 @@ describe('SearchBar', () => {
         chromeStyle$ = of<ChromeStyle>('project');
       });
 
-      it('keyboard shortcut expsoses the component and focuses the text input', async () => {
+      it('keyboard shortcut opens the search modal', async () => {
+        const onOpenSearchModal = jest.fn();
+
         render(
           <IntlProvider locale="en">
             <SearchBar
@@ -283,6 +285,7 @@ describe('SearchBar', () => {
               basePathUrl={basePathUrl}
               chromeStyle$={chromeStyle$}
               reportEvent={eventReporter}
+              onOpenSearchModal={onOpenSearchModal}
             />
           </IntlProvider>
         );
@@ -291,48 +294,9 @@ describe('SearchBar', () => {
           fireEvent.keyDown(window, { key: '/', ctrlKey: true, metaKey: true });
         });
 
-        const inputElement = await screen.findByTestId('nav-search-input');
-
-        expect(document.activeElement).toEqual(inputElement);
-
-        fireEvent.click(await screen.findByTestId('nav-search-conceal'));
-        expect(screen.queryAllByTestId('nav-search-input')).toHaveLength(0);
-
+        expect(onOpenSearchModal).toHaveBeenCalledTimes(1);
         expect(mockReportUiCounter).nthCalledWith(1, 'global_search_bar', 'count', 'shortcut_used');
-        expect(mockReportUiCounter).nthCalledWith(2, 'global_search_bar', 'count', 'search_focus');
-        expect(mockReportUiCounter).toHaveBeenCalledTimes(2);
-      });
-
-      it('show/hide', async () => {
-        render(
-          <IntlProvider locale="en">
-            <SearchBar
-              globalSearch={{ ...searchService, searchCharLimit }}
-              navigateToUrl={applications.navigateToUrl}
-              basePathUrl={basePathUrl}
-              chromeStyle$={chromeStyle$}
-              reportEvent={eventReporter}
-            />
-          </IntlProvider>
-        );
-
-        jest.spyOn(Date, 'now').mockReturnValue(1000);
-
-        fireEvent.click(await screen.findByTestId('nav-search-reveal'));
-        expect(await screen.findByTestId('nav-search-input')).toBeVisible();
-
-        jest.spyOn(Date, 'now').mockReturnValue(2000);
-
-        fireEvent.click(await screen.findByTestId('nav-search-conceal'));
-        expect(screen.queryAllByTestId('nav-search-input')).toHaveLength(0);
-
-        expect(mockReportUiCounter).nthCalledWith(1, 'global_search_bar', 'count', 'search_focus');
         expect(mockReportUiCounter).toHaveBeenCalledTimes(1);
-
-        expect(mockReportEvent).nthCalledWith(1, 'global_search_bar_blur', {
-          focus_time_ms: 1000,
-        });
-        expect(mockReportEvent).toHaveBeenCalledTimes(1);
       });
     });
   });

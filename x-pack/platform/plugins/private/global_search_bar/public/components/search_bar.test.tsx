@@ -67,7 +67,9 @@ describe('SearchBar (UI wiring)', () => {
     expect(shortcutUsedSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('project: starts collapsed and can be revealed/hidden via buttons', async () => {
+  it('project: renders a reveal button that opens the search modal', async () => {
+    const onOpenSearchModal = jest.fn();
+
     render(
       <IntlProvider locale="en">
         <SearchBar
@@ -76,23 +78,22 @@ describe('SearchBar (UI wiring)', () => {
           basePathUrl={basePathUrl}
           chromeStyle$={of<ChromeStyle>('project')}
           reportEvent={eventReporter}
+          onOpenSearchModal={onOpenSearchModal}
         />
       </IntlProvider>
     );
 
-    // collapsed state
     expect(await screen.findByTestId('nav-search-reveal')).toBeInTheDocument();
     expect(screen.queryByTestId('nav-search-input')).not.toBeInTheDocument();
-    // reveal
+
     fireEvent.click(await screen.findByTestId('nav-search-reveal'));
-    expect(await screen.findByTestId('nav-search-input')).toBeInTheDocument();
-    // hide
-    fireEvent.click(await screen.findByTestId('nav-search-conceal'));
-    expect(screen.queryByTestId('nav-search-input')).not.toBeInTheDocument();
+    expect(onOpenSearchModal).toHaveBeenCalledTimes(1);
   });
 
-  it('project: keyboard shortcut reveals and focuses the input when collapsed', async () => {
+  it('project: keyboard shortcut opens the search modal', async () => {
+    const onOpenSearchModal = jest.fn();
     const shortcutUsedSpy = jest.spyOn(eventReporter, 'shortcutUsed');
+
     render(
       <IntlProvider locale="en">
         <SearchBar
@@ -101,16 +102,17 @@ describe('SearchBar (UI wiring)', () => {
           basePathUrl={basePathUrl}
           chromeStyle$={of<ChromeStyle>('project')}
           reportEvent={eventReporter}
+          onOpenSearchModal={onOpenSearchModal}
         />
       </IntlProvider>
     );
 
-    expect(await screen.findByTestId('nav-search-reveal')).toBeInTheDocument();
     act(() => {
       fireEvent.keyDown(window, { key: '/', ctrlKey: true, metaKey: true });
     });
-    const input = await screen.findByTestId('nav-search-input');
-    expect(document.activeElement).toEqual(input);
+
+    expect(onOpenSearchModal).toHaveBeenCalledTimes(1);
     expect(shortcutUsedSpy).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('nav-search-input')).not.toBeInTheDocument();
   });
 });

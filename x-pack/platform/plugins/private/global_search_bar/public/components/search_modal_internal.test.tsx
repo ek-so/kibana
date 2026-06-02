@@ -58,6 +58,7 @@ describe('SearchModalInternal', () => {
 
     expect(screen.getByTestId('chromeProjectNextSearchModalInput')).toBeInTheDocument();
     expect(screen.getByTestId('chromeProjectNextSearchModalFooter')).toBeInTheDocument();
+    expect(screen.queryByTestId('nav-search-conceal')).not.toBeInTheDocument();
   });
 
   it('reports searchFocus on mount and searchBlur on unmount', () => {

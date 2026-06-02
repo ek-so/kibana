@@ -5,26 +5,18 @@
  * 2.0.
  */
 
-import type {
-  CoreSetup,
-  CoreStart,
-  OverlayRef,
-  Plugin,
-  PluginInitializerContext,
-} from '@kbn/core/public';
+import type { CoreSetup, CoreStart, Plugin, PluginInitializerContext } from '@kbn/core/public';
 import type { InternalChromeStart } from '@kbn/core-chrome-browser-internal';
 import type { GlobalSearchPluginStart } from '@kbn/global-search-plugin/public';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import type { UsageCollectionSetup } from '@kbn/usage-collection-plugin/public';
 import React from 'react';
 import { map } from 'rxjs';
-import { toMountPoint } from '@kbn/react-kibana-mount';
 import { SearchBar } from './components/search_bar';
 import type { GlobalSearchBarConfigType } from './types';
 import { EventReporter, eventTypes } from './telemetry';
 import type { SearchProps } from './components/types';
-import { SEARCH_MODAL_SELECTOR_PREFIX } from './components/types';
-import { SearchModal } from './components/search_modal';
+import { createSearchModalController } from './lib/search_modal_controller';
 
 export interface GlobalSearchBarPluginStartDeps {
   globalSearch: GlobalSearchPluginStart;
@@ -66,43 +58,7 @@ export class GlobalSearchBarPlugin implements Plugin<{}, {}, {}, GlobalSearchBar
       prependBasePath: http.basePath.prepend.bind(http.basePath),
     };
 
-    let activeModalRef: OverlayRef | null = null;
-    let modalSessionId = 0;
-
-    const closeModal = () => {
-      activeModalRef?.close();
-      activeModalRef = null;
-    };
-
-    const toggleSearchModal = () => {
-      if (activeModalRef) {
-        closeModal();
-        return;
-      }
-
-      modalSessionId += 1;
-
-      activeModalRef = core.overlays.openModal(
-        toMountPoint(
-          <SearchModal
-            key={modalSessionId}
-            {...searchProps}
-            onClose={() => {
-              closeModal();
-            }}
-          />,
-          core
-        ),
-        {
-          className: SEARCH_MODAL_SELECTOR_PREFIX,
-          'data-test-subj': SEARCH_MODAL_SELECTOR_PREFIX,
-          outsideClickCloses: true,
-        }
-      );
-      activeModalRef.onClose.then(() => {
-        activeModalRef = null;
-      });
-    };
+    const { openSearchModal, toggleSearchModal } = createSearchModalController(core, searchProps);
 
     if (core.chrome.next.isEnabled) {
       core.chrome.next.globalSearch.set({
@@ -112,7 +68,13 @@ export class GlobalSearchBarPlugin implements Plugin<{}, {}, {}, GlobalSearchBar
 
     core.chrome.navControls.registerCenter({
       order: 1000,
-      content: <SearchBar {...searchProps} chromeStyle$={core.chrome.getChromeStyle$()} />,
+      content: (
+        <SearchBar
+          {...searchProps}
+          chromeStyle$={core.chrome.getChromeStyle$()}
+          onOpenSearchModal={openSearchModal}
+        />
+      ),
     });
 
     return {};

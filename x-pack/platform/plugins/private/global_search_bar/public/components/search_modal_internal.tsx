@@ -12,7 +12,6 @@ import {
   EuiModalHeader,
   EuiSelectable,
   euiSelectableTemplateSitewideRenderOptions,
-  useEuiBreakpoint,
   useEuiTheme,
 } from '@elastic/eui';
 import { css } from '@emotion/react';
@@ -24,7 +23,7 @@ import { useSearchState } from '../hooks/use_search_state';
 import type { SearchModalProps } from './types';
 import { globalSearchSelectableListStyles } from '../lib/global_search_list_styles';
 import { EmptyMessage } from './empty_message';
-import { SEARCH_MODAL_SELECTOR_PREFIX } from './types';
+import { SEARCH_MODAL_PADDING_PX, SEARCH_MODAL_SELECTOR_PREFIX } from './types';
 import { CharLimitExceededMessage } from './char_limit_exceeded_message';
 
 export const SearchModalInternal = ({
@@ -38,7 +37,6 @@ export const SearchModalInternal = ({
   prependBasePath,
 }: SearchModalProps) => {
   const { euiTheme } = useEuiTheme();
-  const mediumAndUpBreakpoint = useEuiBreakpoint(['m', 'l', 'xl']);
 
   const {
     searchValue,
@@ -70,15 +68,12 @@ export const SearchModalInternal = ({
   }, [triggerInitialLoad, reportEvent]);
 
   const headerStyles = css`
-    ${mediumAndUpBreakpoint} {
-      padding-block: ${euiTheme.size.base};
-      padding-inline: ${euiTheme.size.base};
-    }
+    padding: ${SEARCH_MODAL_PADDING_PX}px;
   `;
 
   const bodyStyles = css`
     .euiModalBody__overflow {
-      padding-inline: ${euiTheme.size.s};
+      padding: ${SEARCH_MODAL_PADDING_PX}px;
       display: flex;
       flex-direction: column;
       justify-content: ${isLoading || options.length === 0 ? 'center' : 'flex-start'};
@@ -88,8 +83,7 @@ export const SearchModalInternal = ({
   `;
 
   const footerStyles = css`
-    padding-block: ${euiTheme.size.s};
-    padding-inline: ${euiTheme.size.base};
+    padding: ${SEARCH_MODAL_PADDING_PX}px;
   `;
 
   return (
@@ -103,6 +97,7 @@ export const SearchModalInternal = ({
       renderOption={(option) => euiSelectableTemplateSitewideRenderOptions(option, searchValue)}
       listProps={{
         ...selectableListProps,
+        className: 'eui-yScroll',
         showIcons: false,
       }}
       height="full"
@@ -116,7 +111,6 @@ export const SearchModalInternal = ({
         'aria-label': i18nStrings.placeholderText,
         placeholder: i18nStrings.placeholderText,
         fullWidth: true,
-        isClearable: true,
       }}
       errorMessage={
         searchCharLimitExceeded ? <CharLimitExceededMessage basePathUrl={basePathUrl} /> : null
@@ -128,7 +122,6 @@ export const SearchModalInternal = ({
       {(list, search) => (
         <>
           <EuiModalHeader css={headerStyles}>{search}</EuiModalHeader>
-          <EuiHorizontalRule margin="none" />
           <EuiModalBody css={bodyStyles}>{list}</EuiModalBody>
           <EuiHorizontalRule margin="none" />
           <EuiModalFooter
