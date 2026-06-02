@@ -36,6 +36,20 @@ describe('GlobalSearchResultPrependIcon', () => {
 
     expect(container.querySelector('[data-euiicon-type="plus"][color="primary"]')).toBeTruthy();
   });
+
+  it('renders with accent icon and background for favorite prepends', () => {
+    const { container, getByTestId } = render(
+      <GlobalSearchResultPrependIcon type="dashboardApp" color="accent" />
+    );
+
+    const wrapper = getByTestId('globalSearchResultPrependIcon');
+    expect(wrapper).toHaveStyle({
+      backgroundColor: 'var(--euiColorBackgroundLightAccent)',
+    });
+    expect(
+      container.querySelector('[data-euiicon-type="dashboardApp"]:not([color])')
+    ).toBeTruthy();
+  });
 });
 
 describe('createGlobalSearchResultPrepend', () => {

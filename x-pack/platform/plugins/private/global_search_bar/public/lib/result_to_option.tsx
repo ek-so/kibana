@@ -13,13 +13,17 @@ import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-p
 import type { Tag } from '@kbn/saved-objects-tagging-oss-plugin/common';
 import { GlobalSearchResultAppend } from '../components/global_search_result_append';
 import { resolveGlobalSearchPrependIcon } from './global_search_result_icon';
-import { createGlobalSearchResultPrepend } from './global_search_result_prepend_icon';
+import {
+  createGlobalSearchResultPrepend,
+  type GlobalSearchResultPrependIconColor,
+} from './global_search_result_prepend_icon';
 
 export const resultToOption = (
   result: GlobalSearchResult,
   searchTagIds: string[],
   getTagList?: SavedObjectTaggingPluginStart['ui']['getTagList'],
-  getNavigationParent?: (url: string) => NavigationParentContext
+  getNavigationParent?: (url: string) => NavigationParentContext,
+  prependIconColor?: GlobalSearchResultPrependIconColor
 ): EuiSelectableTemplateSitewideOption => {
   const { id, title, url, icon, type, meta = {} } = result;
   const { tagIds = [] } = meta as { tagIds: string[] };
@@ -37,7 +41,7 @@ export const resultToOption = (
     label: title,
     url,
     type,
-    prepend: createGlobalSearchResultPrepend(prependIconType),
+    prepend: createGlobalSearchResultPrepend(prependIconType, prependIconColor),
     'data-test-subj': `nav-search-option`,
   };
 

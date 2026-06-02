@@ -12,7 +12,7 @@ import { EuiIcon, useEuiTheme, type IconType } from '@elastic/eui';
 export const GLOBAL_SEARCH_RESULT_ICON_SIZE_PX = 16;
 export const GLOBAL_SEARCH_RESULT_ICON_WRAPPER_SIZE_PX = 32;
 
-export type GlobalSearchResultPrependIconColor = 'subdued' | 'primary';
+export type GlobalSearchResultPrependIconColor = 'subdued' | 'primary' | 'accent';
 
 export interface GlobalSearchResultPrependIconProps {
   type: IconType;
@@ -39,17 +39,22 @@ export const GlobalSearchResultPrependIcon = ({
     border-radius: 50%;
     background-color: ${color === 'primary'
       ? euiTheme.colors.backgroundLightPrimary
+      : color === 'accent'
+      ? euiTheme.colors.backgroundLightAccent
       : euiTheme.colors.backgroundLightText};
   `;
 
   const iconStyles = css`
     inline-size: ${GLOBAL_SEARCH_RESULT_ICON_SIZE_PX}px;
     block-size: ${GLOBAL_SEARCH_RESULT_ICON_SIZE_PX}px;
+    ${color === 'accent' ? `color: ${euiTheme.colors.accent};` : ''}
   `;
+
+  const iconColor = color === 'accent' ? undefined : color;
 
   return (
     <span css={wrapperStyles} data-test-subj="globalSearchResultPrependIcon">
-      <EuiIcon type={type} color={color} size="s" css={iconStyles} aria-hidden />
+      <EuiIcon type={type} color={iconColor} size="s" css={iconStyles} aria-hidden />
     </span>
   );
 };
