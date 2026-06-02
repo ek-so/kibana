@@ -19,10 +19,12 @@ import type { NavigationParentContext } from '@kbn/core-chrome-browser';
 import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-plugin/public';
 import { resultToOption } from '../lib';
 import { getRecentPages, RECENT_ITEMS_MAIN_LIMIT } from '../recent/recent_store';
+import { filterRecentPagesByTerm } from './filter_bucket_subset';
 import { RecentBucketMoreButton } from './recent_bucket_header_actions';
 import type { GlobalSearchResultsView } from './build_selectable_options';
 import { NAVIGATE_ITEMS_MAIN_LIMIT } from './build_selectable_options';
 import type { GlobalSearchAction } from '../actions/types';
+import { filterActionsByTerm } from './filter_bucket_subset';
 import { insertActionsModalSections } from './insert_actions_bucket_sections';
 
 export interface SearchModalBucketSection {
@@ -74,16 +76,16 @@ export const buildModalBucketSections = ({
   if (view === 'actions') {
     return insertActionsModalSections({
       sections: [],
-      actions,
+      actions: filterActionsByTerm(actions, term),
       actionsTitle: bucketTitles[GLOBAL_SEARCH_BUCKET_ACTIONS],
-      term: '',
+      term,
       view,
       onShowAllActions,
     });
   }
 
   if (view === 'recent') {
-    const allRecentItems = getRecentPages();
+    const allRecentItems = filterRecentPagesByTerm(getRecentPages(), term);
 
     if (allRecentItems.length === 0) {
       return [];

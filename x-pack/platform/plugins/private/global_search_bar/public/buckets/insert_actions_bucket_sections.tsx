@@ -12,6 +12,7 @@ import { GLOBAL_SEARCH_BUCKET_ACTIONS, GLOBAL_SEARCH_BUCKET_RECENT } from '@kbn/
 import { ACTIONS_ITEMS_MAIN_LIMIT } from '../actions/constants';
 import { actionToOption } from '../actions/action_to_option';
 import type { GlobalSearchAction } from '../actions/types';
+import { filterActionsByTerm } from './filter_bucket_subset';
 import type { GlobalSearchResultsView } from './build_selectable_options';
 import type { SearchModalBucketSection } from './build_modal_bucket_sections';
 import { GlobalSearchBucketMoreButton } from './bucket_more_button';
@@ -20,7 +21,7 @@ import { i18nStrings } from '../strings';
 export const shouldShowGlobalSearchActions = (
   term: string,
   view: GlobalSearchResultsView
-): boolean => (view === 'main' || view === 'actions') && term.length === 0;
+): boolean => view === 'actions' || (view === 'main' && term.length === 0);
 
 const buildActionsSection = ({
   actions,
@@ -98,7 +99,7 @@ export const insertActionsModalSections = ({
 
   if (view === 'actions') {
     const actionsSection = buildActionsModalSection({
-      actions,
+      actions: filterActionsByTerm(actions, term),
       actionsTitle,
       view,
       onShowAllActions,
@@ -144,7 +145,9 @@ export const insertActionsSelectableOptions = ({
   }
 
   if (view === 'actions') {
-    if (actions.length === 0) {
+    const filteredActions = filterActionsByTerm(actions, term);
+
+    if (filteredActions.length === 0) {
       return [];
     }
 
@@ -155,7 +158,7 @@ export const insertActionsSelectableOptions = ({
         className: 'globalSearchBucketHeader',
         'data-test-subj': `global-search-bucket-${GLOBAL_SEARCH_BUCKET_ACTIONS}-all`,
       },
-      ...actions.map(actionToOption),
+      ...filteredActions.map(actionToOption),
     ];
   }
 

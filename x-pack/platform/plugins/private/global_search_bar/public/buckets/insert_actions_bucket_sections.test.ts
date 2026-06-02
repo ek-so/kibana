@@ -42,7 +42,7 @@ describe('insertActionsModalSections', () => {
     expect(result[1].options).toHaveLength(1);
   });
 
-  it('does not insert actions when the user is searching', () => {
+  it('does not insert actions when the user is searching in the main view', () => {
     const sections: SearchModalBucketSection[] = [
       { id: GLOBAL_SEARCH_BUCKET_RECENT, title: 'Recent', options: [] },
     ];
@@ -70,6 +70,20 @@ describe('insertActionsModalSections', () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe(GLOBAL_SEARCH_BUCKET_ACTIONS);
     expect(result[0].options).toHaveLength(2);
+  });
+
+  it('filters actions in the nested actions view', () => {
+    const result = insertActionsModalSections({
+      sections: [],
+      actions: [createAction('create-dashboard'), createAction('create-rule')],
+      actionsTitle: 'Actions',
+      term: 'rule',
+      view: 'actions',
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].options).toHaveLength(1);
+    expect(result[0].options[0].key).toBe('create-rule');
   });
 });
 

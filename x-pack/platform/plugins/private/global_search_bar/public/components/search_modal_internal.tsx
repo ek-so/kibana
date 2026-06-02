@@ -7,6 +7,7 @@
 
 import {
   EuiFieldSearch,
+  EuiFieldText,
   EuiHorizontalRule,
   EuiLoadingSpinner,
   EuiModalBody,
@@ -100,8 +101,11 @@ export const SearchModalInternal = ({
   searchValueRef.current = searchValue;
   setSearchValueRef.current = setSearchValue;
 
-  const showNestedBucketInInput =
-    (nestedRecentContext || nestedActionsContext) && searchValue.trim() === '';
+  const searchPlaceholder = nestedRecentContext
+    ? i18nStrings.recentNestedPlaceholderText
+    : nestedActionsContext
+    ? i18nStrings.actionsNestedPlaceholderText
+    : i18nStrings.modalPlaceholderText;
 
   const handleNestedBack = useCallback(() => {
     const parentSnapshot = popScreen();
@@ -178,6 +182,19 @@ export const SearchModalInternal = ({
     </React.Fragment>
   );
 
+  const searchInputProps = {
+    autoFocus: true,
+    fullWidth: true,
+    value: searchValue,
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+      setSearchValue(event.currentTarget.value),
+    inputRef: setSearchRef,
+    'data-test-subj': `${SEARCH_MODAL_SELECTOR_PREFIX}Input`,
+    'aria-label': searchPlaceholder,
+    placeholder: searchPlaceholder,
+    isInvalid: searchCharLimitExceeded,
+  };
+
   return (
     <>
       <EuiModalHeader
@@ -188,22 +205,15 @@ export const SearchModalInternal = ({
             : `${SEARCH_MODAL_SELECTOR_PREFIX}Header`
         }
       >
-        <EuiFieldSearch
-          autoFocus
-          fullWidth
-          value={searchValue}
-          onChange={(event) => setSearchValue(event.currentTarget.value)}
-          prepend={
-            isNested ? <SearchNestedBackPrepend onClick={handleNestedBack} /> : undefined
-          }
-          inputRef={setSearchRef}
-          data-test-subj={`${SEARCH_MODAL_SELECTOR_PREFIX}Input`}
-          aria-label={i18nStrings.modalPlaceholderText}
-          placeholder={
-            showNestedBucketInInput ? currentScreen.title : i18nStrings.modalPlaceholderText
-          }
-          isInvalid={searchCharLimitExceeded}
-        />
+        {isNested ? (
+          <EuiFieldText
+            {...searchInputProps}
+            type="search"
+            prepend={<SearchNestedBackPrepend onClick={handleNestedBack} />}
+          />
+        ) : (
+          <EuiFieldSearch {...searchInputProps} />
+        )}
       </EuiModalHeader>
 
       {searchCharLimitExceeded ? (

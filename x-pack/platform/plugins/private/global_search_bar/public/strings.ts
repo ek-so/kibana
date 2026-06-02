@@ -36,11 +36,23 @@ export const i18nStrings = {
     defaultMessage: 'Back to previous search',
   }),
   placeholderText: i18n.translate('xpack.globalSearchBar.searchBar.placeholder', {
-    defaultMessage: 'Find apps, content, and more.',
+    defaultMessage: 'Find pages, perform actions, ask Agent and more...',
   }),
   modalPlaceholderText: i18n.translate('xpack.globalSearchBar.searchModal.placeholder', {
-    defaultMessage: 'Search for apps and commands...',
+    defaultMessage: 'Find pages, perform actions, ask Agent and more...',
   }),
+  recentNestedPlaceholderText: i18n.translate(
+    'xpack.globalSearchBar.searchModal.recentNestedPlaceholder',
+    {
+      defaultMessage: 'Find in recent...',
+    }
+  ),
+  actionsNestedPlaceholderText: i18n.translate(
+    'xpack.globalSearchBar.searchModal.actionsNestedPlaceholder',
+    {
+      defaultMessage: 'Find in actions...',
+    }
+  ),
   popoverButton: i18n.translate('xpack.globalSearchBar.searchBar.mobileSearchButtonAriaLabel', {
     defaultMessage: 'Site-wide search',
   }),

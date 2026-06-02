@@ -18,6 +18,7 @@ import type { SavedObjectTaggingPluginStart } from '@kbn/saved-objects-tagging-p
 import type { SearchSuggestion } from '../suggestions';
 import { resultToOption, suggestionToOption } from '../lib';
 import { getRecentPages, RECENT_ITEMS_MAIN_LIMIT } from '../recent/recent_store';
+import { filterRecentPagesByTerm } from './filter_bucket_subset';
 import { RecentBucketMoreButton } from './recent_bucket_header_actions';
 import type { GlobalSearchAction } from '../actions/types';
 import { insertActionsSelectableOptions } from './insert_actions_bucket_sections';
@@ -78,14 +79,14 @@ export const buildSelectableOptionsFromBuckets = ({
       options: [],
       actions,
       actionsTitle: bucketTitles[GLOBAL_SEARCH_BUCKET_ACTIONS],
-      term: '',
+      term,
       view,
       onShowAllActions,
     });
   }
 
   if (view === 'recent') {
-    const allRecentItems = getRecentPages();
+    const allRecentItems = filterRecentPagesByTerm(getRecentPages(), term);
 
     if (allRecentItems.length === 0) {
       return [];

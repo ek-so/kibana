@@ -461,6 +461,46 @@ describe('useSearchState', () => {
     expect(navigateToUrl).toHaveBeenCalledWith('/app/discover');
   });
 
+  it('filters recent pages locally in the nested recent modal view', async () => {
+    mockGetRecentPages.mockReturnValue([
+      createResult({ id: 'recent-discover', type: 'application', title: 'Discover' }),
+      createResult({ id: 'recent-dashboard', type: 'dashboard', title: 'Sales Dashboard' }),
+    ]);
+
+    const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
+
+    globalSearch.find.mockReturnValueOnce(
+      of(createBatch({ id: 'global-match', type: 'application', title: 'Global Match' }))
+    );
+
+    const { result } = renderHook(() =>
+      useSearchState({
+        globalSearch,
+        navigateToUrl,
+        navigateToApp,
+        reportEvent,
+        nestedRecentContext: true,
+        useModalBucketLayout: true,
+      })
+    );
+
+    await triggerInitialLoadAndRunDebounce(result);
+
+    act(() => {
+      result.current.setSearchValue('sales');
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(350);
+    });
+
+    expect(globalSearch.find).toHaveBeenCalledTimes(1);
+    expect(result.current.modalBucketSections).toHaveLength(1);
+    expect(getSelectableLabels(result.current.modalBucketSections[0].options)).toEqual([
+      'Sales Dashboard',
+    ]);
+  });
+
   it('navigates on pointer activation via onActiveOptionChange', async () => {
     const { globalSearch, navigateToUrl, navigateToApp, reportEvent } = makeDeps();
 

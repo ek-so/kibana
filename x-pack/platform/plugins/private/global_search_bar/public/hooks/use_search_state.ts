@@ -177,22 +177,15 @@ export const useSearchState = ({
 
   const activeResultsView = useMemo((): GlobalSearchResultsView => {
     if (nestedRecentContext) {
-      return searchValue.trim() === '' ? 'recent' : 'main';
+      return 'recent';
     }
 
     if (nestedActionsContext) {
-      return searchValue.trim() === '' ? 'actions' : 'main';
-    }
-
-    if (
-      (resultsView === 'recent' || resultsView === 'actions') &&
-      searchValue.trim() !== ''
-    ) {
-      return 'main';
+      return 'actions';
     }
 
     return resultsView;
-  }, [nestedActionsContext, nestedRecentContext, resultsView, searchValue]);
+  }, [nestedActionsContext, nestedRecentContext, resultsView]);
 
   const activeResultsViewRef = useRef(activeResultsView);
   activeResultsViewRef.current = activeResultsView;
@@ -272,7 +265,7 @@ export const useSearchState = ({
       });
 
       if (useModalBucketLayout) {
-        setSuggestionOptions(suggestions.map(suggestionToOption));
+        setSuggestionOptions(view === 'main' ? suggestions.map(suggestionToOption) : []);
         setModalBucketSections(
           buildModalBucketSections({
             buckets,
@@ -284,7 +277,7 @@ export const useSearchState = ({
             onShowAllRecent: stableShowAllRecent,
             onShowAllActions: stableShowAllActions,
             actions: getGlobalSearchActions(),
-            term: view === 'recent' || view === 'actions' ? '' : term,
+            term,
           })
         );
         setOptions([]);
@@ -305,7 +298,7 @@ export const useSearchState = ({
           onShowAllRecent: stableShowAllRecent,
           onShowAllActions: stableShowAllActions,
           actions: getGlobalSearchActions(),
-          term: view === 'recent' || view === 'actions' ? '' : term,
+          term,
         })
       );
     },
@@ -416,11 +409,32 @@ export const useSearchState = ({
   useDebounce(
     () => {
       if (initialLoad) {
-        if (
-          (activeResultsViewRef.current === 'recent' ||
-            activeResultsViewRef.current === 'actions') &&
-          searchValue.trim() === ''
-        ) {
+        const subsetView =
+          activeResultsViewRef.current === 'recent' ||
+          activeResultsViewRef.current === 'actions';
+
+        if (subsetView) {
+          searchSubscription.current?.unsubscribe();
+          searchSubscription.current = null;
+
+          if (searchValue.length > globalSearch.searchCharLimit) {
+            setSearchCharLimitExceeded(true);
+            setIsLoading(false);
+            return;
+          }
+
+          setSearchCharLimitExceeded(false);
+
+          const normalizedTerm = searchValue.toLowerCase();
+          const params = lastUpdateParamsRef.current;
+
+          updateOptions(
+            params?.results ?? latestResultsRef.current,
+            [],
+            params?.searchTagIds ?? [],
+            normalizedTerm,
+            activeResultsViewRef.current
+          );
           setIsLoading(false);
           return;
         }
